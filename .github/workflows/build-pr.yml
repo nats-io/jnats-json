@@ -7,5 +7,16 @@ on:
 
 jobs:
   build:
-    uses: synadia-io/workflows/.github/workflows/java-matrix-8-25-coveralls-pr.yml@main
+    uses: synadia-io/workflows/.github/workflows/java-matrix-8-25-pr-build.yml@main
     secrets: inherit
+
+  coveralls-finish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Coveralls Finish
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
+          parallel-finished: true
+          carryforward: "tc8"
