@@ -36,7 +36,7 @@ public class MapBuilder implements JsonSerializable {
     public final JsonValue jv;
 
     private final Map<String, JsonValue> theMap;
-    
+
     /**
      * Get a new instance of MapBuilder. Does not put nulls
      */
@@ -65,6 +65,7 @@ public class MapBuilder implements JsonSerializable {
 
     /**
      * Get an instance of MapBuilder that optionally puts nulls
+     * @param putNulls whether to put nulls
      * @return a MapBuilder instance
      */
     @NonNull

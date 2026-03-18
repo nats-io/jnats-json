@@ -66,6 +66,7 @@ public class ArrayBuilder implements JsonSerializable {
 
     /**
      * Get an instance of ArrayBuilder that optionally adds nulls
+     * @param addNulls whether to add nulls
      * @return an ArrayBuilder instance
      */
     @NonNull
