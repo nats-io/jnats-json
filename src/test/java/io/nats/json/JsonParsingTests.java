@@ -606,6 +606,10 @@ public final class JsonParsingTests {
 
     @Test
     public void testValueUtilsInstanceMap() {
+        validateMap(instance(getValuesMap()), false, false, true);
+    }
+
+    private static @NonNull Map<String, Object> getValuesMap() {
         Map<String, Object> map = new HashMap<>();
         map.put("string", "Hello");
         map.put("empty_is_string", "");
@@ -626,53 +630,48 @@ public final class JsonParsingTests {
         map.put("jv", JsonValue.EMPTY_MAP);
         map.put("null", null);
         map.put("jvNull", JsonValue.NULL);
-        validateMap(instance(map), false, false);
+        return map;
     }
 
     @Test
     public void testValueUtilsMapBuilder() {
-        MapBuilder builder = MapBuilder.instance()
-            .put("string", "Hello")
-            .put("empty_is_string", "")
-            .put("space_is_string", " ")
-            .put("char", 'c')
-            .put("int", 1)
-            .put("long", Long.MAX_VALUE)
-            .put("double", 1D)
-            .put("float", 1F)
-            .put("bd", new BigDecimal("1.0"))
-            .put("bi", new BigInteger(Long.toString(Long.MAX_VALUE)))
-            .put("bool", true)
-            .put("map", new HashMap<>())
-            .put("list", new ArrayList<>())
-            .put("set", new HashSet<>())
-            .put("smap", new TestSerializableMap())
-            .put("slist", new TestSerializableList())
-            .put("jv", JsonValue.EMPTY_MAP)
-            .put("null", null)
-            .put("jvNull", JsonValue.NULL);
+        Map<String, Object> map = getValuesMap();
+
+        MapBuilder builder = MapBuilder.instance(true);
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            builder.put(entry.getKey(), entry.getValue());
+        }
 
         builder.jv.toJson(); // COVERAGE
-        validateMap(builder.toJsonValue(), false, false);
-        validateMap(JsonParser.parseUnchecked(builder.toJson()), true, false);
-        validateMap(JsonParser.parseUnchecked(builder.toJson(), KEEP_NULLS), true, true);
+        validateMap(builder.toJsonValue(), false, false, true);
+        validateMap(JsonParser.parseUnchecked(builder.toJson()), true, false, true);
+        validateMap(JsonParser.parseUnchecked(builder.toJson(), KEEP_NULLS), true, true, true);
 
         //noinspection DataFlowIssue // NO ISSUE, WE KNOW jv.map is NOT NULL
         builder.jv.map.put("jvNull", JsonValue.NULL); // because the original map builder does not put nulls
-        MapBuilder builder2 = MapBuilder.instance()
+        MapBuilder builder2 = MapBuilder.instance(true)
             .put("map", builder.jv.map);
         //noinspection DataFlowIssue // NO ISSUE, WE KNOW jv.map is NOT NULL
-        validateMap(builder2.jv.map.get("map"), false, false);
+        validateMap(builder2.jv.map.get("map"), false, false, true);
 
-        builder2 = MapBuilder.instance().putEntries(builder.jv.map);
-        validateMap(builder2.jv, false, false);
+        builder2 = MapBuilder.instance(true).putEntries(builder.jv.map);
+        validateMap(builder2.jv, false, false, true);
 
-        builder2 = MapBuilder.instance().putEntries(null);
+        builder2 = MapBuilder.instance(true).putEntries(null);
         assertNotNull(builder2.jv.map);
         assertTrue(builder2.jv.map.isEmpty());
+
+        builder = MapBuilder.instance(false);
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            builder.put(entry.getKey(), entry.getValue());
+        }
+
+        validateMap(builder.toJsonValue(), false, false, false);
+        validateMap(JsonParser.parseUnchecked(builder.toJson()), true, false, false);
+        validateMap(JsonParser.parseUnchecked(builder.toJson(), KEEP_NULLS), true, true, false);
     }
 
-    private static void validateMap(JsonValue v, boolean parsed, boolean parsedKeepNulls) {
+    private static void validateMap(JsonValue v, boolean parsed, boolean parsedKeepNulls, boolean putNulls) {
         assertNotNull(v.map);
         assertEquals(JsonValueType.STRING, v.map.get("string").type);
         assertEquals(JsonValueType.STRING, v.map.get("empty_is_string").type);
@@ -689,14 +688,16 @@ public final class JsonParsingTests {
             assertEquals(JsonValueType.DOUBLE, v.map.get("double").type);
             assertEquals(JsonValueType.FLOAT, v.map.get("float").type);
             assertEquals(JsonValueType.BIG_INTEGER, v.map.get("bi").type);
-            assertEquals(JsonValueType.NULL, v.map.get("jvNull").type);
+            if (putNulls) {
+                assertEquals(JsonValueType.NULL, v.map.get("null").type);
+                assertEquals(JsonValueType.NULL, v.map.get("jvNull").type);
+            }
         }
-        if (parsed && !parsedKeepNulls) {
-            assertEquals(17, v.map.size());
+        int size = 19;
+        if ((parsed && !parsedKeepNulls) || !putNulls) {
+            size = 17;
         }
-        else {
-            assertEquals(19, v.map.size());
-        }
+        assertEquals(size, v.map.size());
         assertEquals(JsonValueType.BIG_DECIMAL, v.map.get("bd").type);
         assertEquals(JsonValueType.BOOL, v.map.get("bool").type);
         assertEquals(JsonValueType.MAP, v.map.get("map").type);
@@ -708,7 +709,41 @@ public final class JsonParsingTests {
     }
 
     @Test
+    public void testValueUtilsArrayBuilder() {
+        ArrayBuilder builder1 = makeArrayBuilder(true);
+        validateArray(false, builder1.toJsonValue(), true);
+        validateArray(true, JsonParser.parseUnchecked(builder1.toJson()), true);
+
+        ArrayBuilder builder2 = makeArrayBuilder(false);
+        validateArray(false, builder2.toJsonValue(), false);
+        validateArray(true, JsonParser.parseUnchecked(builder2.toJson()), false);
+
+        ArrayBuilder builder3 = ArrayBuilder.instance(true).addItems(builder1.jv.array);
+        validateArray(false, builder3.jv, true);
+
+        ArrayBuilder builder4 = ArrayBuilder.instance().addItems(null);
+        assertNotNull(builder4.jv.array);
+        assertTrue(builder4.jv.array.isEmpty());
+
+        ArrayBuilder builder5 = ArrayBuilder.instance(false).addItems(builder1.jv.array);
+        validateArray(false, builder5.jv, false);
+    }
+
+    private static ArrayBuilder makeArrayBuilder(boolean addNulls) {
+        List<Object> list = getValuesList();
+        ArrayBuilder builder = ArrayBuilder.instance(addNulls);
+        for (Object value : list) {
+            builder.add(value);
+        }
+        return builder;
+    }
+
+    @Test
     public void testValueUtilsInstanceArray() {
+        validateArray(false, JsonValue.instance(getValuesList()), true);
+    }
+
+    private static @NonNull List<Object> getValuesList() {
         List<Object> list = new ArrayList<>();
         list.add("Hello");
         list.add('c');
@@ -726,40 +761,10 @@ public final class JsonParsingTests {
         list.add(JsonValue.EMPTY_MAP);
         list.add(null);
         list.add(JsonValue.NULL);
-        validateArray(false, JsonValue.instance(list));
+        return list;
     }
 
-    @Test
-    public void testValueUtilsArrayBuilder() {
-        ArrayBuilder builder = ArrayBuilder.instance()
-            .add("Hello")
-            .add('c')
-            .add(1)
-            .add(Long.MAX_VALUE)
-            .add(1D)
-            .add(1F)
-            .add(new BigDecimal("1.0"))
-            .add(new BigInteger(Long.toString(Long.MAX_VALUE)))
-            .add(true)
-            .add(new HashMap<>())
-            .add(new ArrayList<>())
-            .add(new TestSerializableMap())
-            .add(new TestSerializableList())
-            .add(JsonValue.EMPTY_MAP)
-            .add(null)
-            .add(JsonValue.NULL);
-        validateArray(false, builder.toJsonValue());
-        validateArray(true, JsonParser.parseUnchecked(builder.toJson()));
-
-        ArrayBuilder builder2 = ArrayBuilder.instance().addItems(builder.jv.array);
-        validateArray(false, builder2.jv);
-
-        builder2 = ArrayBuilder.instance().addItems(null);
-        assertNotNull(builder2.jv.array);
-        assertTrue(builder2.jv.array.isEmpty());
-    }
-
-    private static void validateArray(boolean parsed, JsonValue v) {
+    private static void validateArray(boolean parsed, JsonValue v, boolean addNulls) {
         assertNotNull(v.array);
         assertEquals(JsonValueType.STRING, v.array.get(0).type);
         assertEquals(JsonValueType.STRING, v.array.get(1).type);
@@ -775,7 +780,6 @@ public final class JsonParsingTests {
             assertEquals(JsonValueType.FLOAT, v.array.get(5).type);
             assertEquals(JsonValueType.BIG_INTEGER, v.array.get(7).type);
         }
-        assertEquals(16, v.array.size());
         assertEquals(JsonValueType.BIG_DECIMAL, v.array.get(6).type);
         assertEquals(JsonValueType.BOOL, v.array.get(8).type);
         assertEquals(JsonValueType.MAP, v.array.get(9).type);
@@ -783,6 +787,15 @@ public final class JsonParsingTests {
         assertEquals(JsonValueType.MAP, v.array.get(11).type);
         assertEquals(JsonValueType.ARRAY, v.array.get(12).type);
         assertEquals(JsonValueType.MAP, v.array.get(13).type);
+
+        if (addNulls) {
+            assertEquals(16, v.array.size());
+            assertEquals(JsonValueType.NULL, v.array.get(14).type);
+            assertEquals(JsonValueType.NULL, v.array.get(15).type);
+        }
+        else {
+            assertEquals(14, v.array.size());
+        }
     }
 
     @Test
