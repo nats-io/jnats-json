@@ -1,1 +1,4 @@
 rootProject.name = 'jnats-json'
+
+include 'gson'
+include 'jackson'

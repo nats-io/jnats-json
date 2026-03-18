@@ -301,7 +301,7 @@ public class JsonValue implements JsonSerializable {
     }
 
     /**
-     * Create a JsonValue from a map
+     * Create a JsonValue from a map This becomes a {@link JsonValueType#MAP}
      * @param map the map
      */
     public JsonValue(Map<String, JsonValue> map) {
@@ -309,10 +309,10 @@ public class JsonValue implements JsonSerializable {
     }
 
     /**
-     * Create a JsonValue from a collection. This becomes a JsonValueType.ARRAY
+     * Create a JsonValue from a List. This becomes a {@link JsonValueType#ARRAY}
      * @param collection the collection
      */
-    public JsonValue(Collection<JsonValue> collection) {
+    public JsonValue(List<JsonValue> collection) {
         this(null, null, null, null, null, null, null, null, null, collection);
     }
 
@@ -333,11 +333,11 @@ public class JsonValue implements JsonSerializable {
                       @Nullable BigDecimal bd,
                       @Nullable BigInteger bi,
                       @Nullable Map<String, JsonValue> map,
-                      @Nullable Collection<JsonValue> array)
+                      @Nullable List<JsonValue> array)
     {
         this.map = map;
         this.mapOrder = new ArrayList<>();
-        this.array = array == null ? null : new ArrayList<>(array);
+        this.array = array;
         this.string = string;
         this.bool = bool;
         this.i = i;

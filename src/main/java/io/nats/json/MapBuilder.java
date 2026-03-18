@@ -24,6 +24,10 @@ import java.util.Map;
  * Utility class to build a JsonValue for a map
  */
 public class MapBuilder implements JsonSerializable {
+    /**
+     * Whether this builder puts nulls in the map
+     */
+    public final boolean putNulls;
 
     /**
      * The JsonValue backing this MapBuilder
@@ -31,20 +35,41 @@ public class MapBuilder implements JsonSerializable {
     @NonNull
     public final JsonValue jv;
 
+    private final Map<String, JsonValue> theMap;
+    
     /**
-     * Get a new instance of MapBuilder
+     * Get a new instance of MapBuilder. Does not put nulls
      */
     public MapBuilder() {
-        jv = new JsonValue(new HashMap<>());
+        this(false);
     }
 
     /**
-     * Get an instance of MapBuilder
+     * Get a new instance of MapBuilder, optionally putting nulls
+     * @param putNulls whether to put nulls
+     */
+    public MapBuilder(boolean putNulls) {
+        this.putNulls = putNulls;
+        theMap = new HashMap<>();
+        jv = new JsonValue(theMap);
+    }
+
+    /**
+     * Get an instance of MapBuilder that does not put nulls
      * @return a MapBuilder instance
      */
     @NonNull
     public static MapBuilder instance() {
-        return new MapBuilder();
+        return new MapBuilder(false);
+    }
+
+    /**
+     * Get an instance of MapBuilder that optionally puts nulls
+     * @return a MapBuilder instance
+     */
+    @NonNull
+    public static MapBuilder instance(boolean putNulls) {
+        return new MapBuilder(putNulls);
     }
 
     /**
@@ -55,9 +80,16 @@ public class MapBuilder implements JsonSerializable {
      */
     @NonNull
     public MapBuilder put(@NonNull String key, @Nullable Object value) {
-        //noinspection DataFlowIssue // NO ISSUE, WE KNOW jv.map is NOT NULL
-        jv.map.put(key, JsonValue.instance(value));
-        jv.mapOrder.add(key);
+        if (value == null || value == JsonValue.NULL) {
+            if (putNulls) {
+                theMap.put(key, JsonValue.NULL);
+                jv.mapOrder.add(key);
+            }
+        }
+        else {
+            theMap.put(key, JsonValue.instance(value));
+            jv.mapOrder.add(key);
+        }
         return this;
     }
 
@@ -71,10 +103,7 @@ public class MapBuilder implements JsonSerializable {
     public MapBuilder putEntries(@Nullable Map<String, ?> map) {
         if (map != null) {
             for (Map.Entry<String, ?> entry : map.entrySet()) {
-                String key = entry.getKey();
-                //noinspection DataFlowIssue // NO ISSUE, WE KNOW jv.map is NOT NULL
-                jv.map.put(key, JsonValue.instance(entry.getValue()));
-                jv.mapOrder.add(key);
+                put(entry.getKey(), entry.getValue());
             }
         }
         return this;
