@@ -396,18 +396,14 @@ public final class JsonValueUtilsTests {
         }
 
         assertNull(readIntegerListOrNull(TEST_JV, STRING));
+        assertNull(readIntegerListOrNull(TEST_JV, SLIST));
+        assertNull(readIntegerListOrNull(TEST_JV, LLIST));
+
         assertTrue(readIntegerListOrEmpty(TEST_JV, STRING).isEmpty());
+        assertTrue(readIntegerListOrEmpty(TEST_JV, SLIST).isEmpty());
+        assertTrue(readIntegerListOrEmpty(TEST_JV, LLIST).isEmpty());
 
         List<List<Integer>> intLists = new ArrayList<>();
-        intLists.add(readIntegerListOrNull(TEST_JV, SLIST));
-        intLists.add(readIntegerListOrEmpty(TEST_JV, SLIST));
-        intLists.add(readIntegerListOrNull(TEST_JV, LLIST));
-        intLists.add(readIntegerListOrEmpty(TEST_JV, LLIST));
-        for (List<Integer> aoi : intLists) {
-            assertTrue(aoi.isEmpty());
-        }
-
-        intLists.clear();
         intLists.add(readIntegerListOrNull(TEST_JV, MLIST));
         intLists.add(readIntegerListOrEmpty(TEST_JV, MLIST));
         for (List<Integer> aoi : intLists) {
@@ -428,16 +424,12 @@ public final class JsonValueUtilsTests {
         }
 
         assertNull(readLongListOrNull(TEST_JV, STRING));
+        assertNull(readLongListOrNull(TEST_JV, SLIST));
+
         assertTrue(readLongListOrEmpty(TEST_JV, STRING).isEmpty());
+        assertTrue(readLongListOrEmpty(TEST_JV, SLIST).isEmpty());
 
         List<List<Long>> longLists = new ArrayList<>();
-        longLists.add(readLongListOrNull(TEST_JV, SLIST));
-        longLists.add(readLongListOrEmpty(TEST_JV, SLIST));
-        for (List<Long> aol : longLists) {
-            assertTrue(aol.isEmpty());
-        }
-
-        longLists.clear();
         longLists.add(readLongListOrNull(TEST_JV, MLIST));
         longLists.add(readLongListOrEmpty(TEST_JV, MLIST));
         for (List<Long> aol : longLists) {

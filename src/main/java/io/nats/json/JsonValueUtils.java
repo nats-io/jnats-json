@@ -24,10 +24,11 @@ import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.function.Function;
 
-import static io.nats.json.JsonValue.*;
+import static io.nats.json.JsonValue.EMPTY_MAP;
+import static io.nats.json.JsonValue.EMPTY_MAP_MAP;
 
 /**
- * Utilities around JsonValue finding values in a JsonValueType.MAP.
+ * Utilities around JsonValue finding values in a {@link JsonValueType#MAP}.
  */
 public abstract class JsonValueUtils {
 
@@ -35,7 +36,7 @@ public abstract class JsonValueUtils {
 
     /**
      * Read a key's value, without assuming it's type
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @return The JsonValue or null if the key is not found
      */
@@ -46,7 +47,7 @@ public abstract class JsonValueUtils {
 
     /**
      * Read a value generically
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @param dflt the default value to use if the input is null, is not a map, or the key is not found
      * @param valueSupplier the generic supplier that converts the object to the output type
@@ -64,7 +65,7 @@ public abstract class JsonValueUtils {
 
     /**
      * Read a key's value and extract the value using the value supplied
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @param dflt the default value for error conditions, like wrong type or not found
      * @param requiredType the required type of the value found with the key
@@ -82,9 +83,9 @@ public abstract class JsonValueUtils {
     }
 
     /**
-     * Read a key's string value expecting the value to be of type JsonValue.JsonValueType.STRING,
+     * Read a key's string value expecting the value to be of type {@link JsonValueType#STRING}.
      * If the key is not found or the type is not STRING, null is returned
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @return the string or null
      */
@@ -94,9 +95,9 @@ public abstract class JsonValueUtils {
     }
 
     /**
-     * Read a key's string value expecting the value to be of type JsonValue.JsonValueType.STRING,
+     * Read a key's string value expecting the value to be of type {@link JsonValueType#STRING}.
      * If the key is not found or the type is not STRING, the supplied default is returned
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @param dflt the default value. Null is allowed
      * @return the string or the default
@@ -107,10 +108,10 @@ public abstract class JsonValueUtils {
     }
 
     /**
-     * Read a key's int value expecting the value to be of type JsonValue.JsonValueType.INTEGER,
-     * or of type JsonValue.JsonValueType.LONG with a value in the range of integer.
+     * Read a key's int value expecting the value to be of type {@link JsonValueType#INTEGER}.
+     * or of type {@link JsonValueType#LONG} with a value in the range of integer.
      * If the key is not found or the value is not an integer, null is returned
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @return the integer or null
      */
@@ -120,10 +121,10 @@ public abstract class JsonValueUtils {
     }
 
     /**
-     * Read a key's int value expecting the value to be of type JsonValue.JsonValueType.INTEGER,
-     * or of type JsonValue.JsonValueType.LONG with a value in the range of integer.
+     * Read a key's int value expecting the value to be of type {@link JsonValueType#INTEGER}.
+     * or of type {@link JsonValueType#LONG} with a value in the range of integer.
      * If the key is not found or the value is not an integer, the supplied default is returned
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @param dflt the default value
      * @return the integer or the default
@@ -134,10 +135,9 @@ public abstract class JsonValueUtils {
     }
 
     /**
-     * Read a key's long value expecting the value to be of type JsonValue.JsonValueType.LONG
-     * or JsonValue.JsonValueType.INTEGER,
+     * Read a key's long value expecting the value to be of type {@link JsonValueType#INTEGER} or {@link JsonValueType#LONG}.
      * If the key is not found or the value is not an integer or long, null is returned
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @return the long or null
      */
@@ -147,10 +147,9 @@ public abstract class JsonValueUtils {
     }
 
     /**
-     * Read a key's long value expecting the value to be of type JsonValue.JsonValueType.LONG
-     * or JsonValue.JsonValueType.INTEGER,
+     * Read a key's long value expecting the value to be of type {@link JsonValueType#INTEGER} or {@link JsonValueType#LONG}.
      * If the key is not found or the value is not an integer or long, the default is returned
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @param dflt the default value
      * @return the long or the default
@@ -161,9 +160,9 @@ public abstract class JsonValueUtils {
     }
 
     /**
-     * Read a key's string value expecting the value to be of type JsonValue.JsonValueType.BOOL
-     * <p>If the key is not found or the type is not BOOL, false is returned.</p>
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * Read a key's value expecting the value to be of type {@link JsonValueType#BOOL}.
+     * <p>If the key is not found or the type is not BOOL, null is returned.</p>
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @return the value or false
      */
@@ -173,9 +172,9 @@ public abstract class JsonValueUtils {
     }
 
     /**
-     * Read a key's string value expecting the value to be of type JsonValue.JsonValueType.BOOL
+     * Read a key's value expecting the value to be of type {@link JsonValueType#BOOL}.
      * <p>If the key is not found or the type is not BOOL, the default returned.</p>
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @param dflt the default value
      * @return the value or the default
@@ -186,13 +185,13 @@ public abstract class JsonValueUtils {
     }
 
     /**
-     * Read a key's string value expecting the value to be of type JsonValue.JsonValueType.STRING,
+     * Read a key's string value expecting the value to be of type {@link JsonValueType#STRING}.
      * and then parses that string to a ZonedDateTime.
      * <p>If the key is not found or the type is not STRING, null is returned.</p>
      * <p>If the string is found but is not parseable by ZonedDateTime, a DateTimeParseException is thrown</p>
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
-     * @return the string or null
+     * @return the ZonedDateTime or null
      */
     @Nullable
     public static ZonedDateTime readDate(@Nullable JsonValue jv, @NonNull String key) {
@@ -201,11 +200,10 @@ public abstract class JsonValueUtils {
     }
 
     /**
-     * Read a key's string value expecting the value to be of type JsonValue.JsonValueType.INTEGER
-     * or JsonValue.JsonValueType.LONG, and then converts that to a Duration assuming the number
-     * represents nanoseconds
+     * Read a key's value expecting the value to be of type {@link JsonValueType#INTEGER}
+     * or {@link JsonValueType#LONG}, and then converts that to a Duration assuming the number represents nanoseconds
      * <p>If the key is not found or the type is not INTEGER or LONG, null is returned.</p>
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @return the Duration or null
      */
@@ -216,11 +214,11 @@ public abstract class JsonValueUtils {
     }
 
     /**
-     * Read a key's string value expecting the value to be of type JsonValue.JsonValueType.INTEGER
-     * or JsonValue.JsonValueType.LONG, and then converts that to a Duration assuming the number
+     * Read a key's value expecting the value to be of type {@link JsonValueType#INTEGER}
+     * or {@link JsonValueType#LONG}, and then converts that to a Duration assuming the number
      * represents nanoseconds
      * <p>If the key is not found or the type is not INTEGER or LONG, null is returned.</p>
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @param dflt the default value
      * @return the Duration or the default
@@ -232,12 +230,12 @@ public abstract class JsonValueUtils {
     }
 
     /**
-     * Read a key's string value expecting the value to be of type JsonValue.JsonValueType.STRING,
+     * Read a key's string value expecting the value to be of type {@link JsonValueType#STRING}.
      * If the key is not found or the type is not STRING, null is returned,
      * otherwise the string is converted to bytes using UTF8
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
-     * @return the string or the default
+     * @return the byte[] or null
      */
     public static byte @Nullable [] readBytes(@Nullable JsonValue jv, @NonNull String key) {
         String s = readString(jv, key);
@@ -245,13 +243,13 @@ public abstract class JsonValueUtils {
     }
 
     /**
-     * Read a key's string value expecting the value to be of type JsonValue.JsonValueType.STRING,
+     * Read a key's string value expecting the value to be of type {@link JsonValueType#STRING}.
      * If the key is not found or the type is not STRING, null is returned,
      * otherwise the string is converted to bytes using the charset provided
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @param charset the charset of the bytes in the read string
-     * @return the string or null
+     * @return the string or default
      */
     public static byte @Nullable [] readBytes(@Nullable JsonValue jv, @NonNull String key, Charset charset) {
         String s = readString(jv, key);
@@ -259,10 +257,10 @@ public abstract class JsonValueUtils {
     }
 
     /**
-     * Read a key's string value expecting the value to be of type JsonValue.JsonValueType.STRING,
+     * Read a key's string value expecting the value to be of type {@link JsonValueType#STRING}.
      * If the key is not found or the type is not STRING, null is returned,
      * otherwise the string is converted to bytes using Encoding.base64BasicDecode
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @return the byte[] or null
      */
@@ -272,10 +270,10 @@ public abstract class JsonValueUtils {
     }
 
     /**
-     * Read a key's string value expecting the value to be of type JsonValue.JsonValueType.STRING,
+     * Read a key's string value expecting the value to be of type {@link JsonValueType#STRING}.
      * If the key is not found or the type is not STRING, null is returned,
      * otherwise the string is converted to bytes using Encoding.base64UrlDecode
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @return the byte[] or null
      */
@@ -287,7 +285,7 @@ public abstract class JsonValueUtils {
     /**
      * Read a key's map value as a generic JsonValue assuming the value is a JSON object (a map)
      * If the key is not found or the value type is not MAP, null is returned
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @return The JsonValue for the MAP object or null
      */
@@ -299,7 +297,7 @@ public abstract class JsonValueUtils {
     /**
      * Read a key's map value as a generic JsonValue assuming the value is a JSON object (a map)
      * If the key is not found or the value type is not MAP, EMPTY_MAP is returned
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @return The JsonValue for the MAP object or EMPTY_MAP
      */
@@ -312,7 +310,7 @@ public abstract class JsonValueUtils {
     /**
      * Read a key's map value as a Map of String to JsonValue
      * If the key is not found or the value type is not MAP, null is returned
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @return The JsonValue for the MAP object or null
      */
@@ -325,7 +323,7 @@ public abstract class JsonValueUtils {
     /**
      * Read a key's map value as a Map of String to JsonValue
      * If the key is not found or the value type is not MAP, EMPTY_MAP is returned
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @return The JsonValue for the MAP object or EMPTY_MAP
      */
@@ -341,7 +339,7 @@ public abstract class JsonValueUtils {
      * otherwise the key will not be included in the returned map.
      * If there is no map for the key, or the map is found but empty,
      * the function returns null.
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @return The resolved map or null
      */
@@ -357,9 +355,9 @@ public abstract class JsonValueUtils {
      * otherwise the key will not be included in the returned map.
      * If there is no map for the key, or the map is found but empty,
      * the function returns null.
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
-     * @return The resolved map or null
+     * @return The resolved map or empty map
      */
     @NonNull
     public static Map<String, String> readStringMapOrEmpty(@Nullable JsonValue jv, @NonNull String key) {
@@ -370,7 +368,7 @@ public abstract class JsonValueUtils {
      * Converts a JsonValue's Map of String to JsonValue to a Map of String to String,
      * filtering out any key whose value is not a string.
      * @param map the input map
-     * @return the converted map. Map be empty but not null.
+     * @return the converted map. May be empty but not null.
      */
     @NonNull
     public static Map<String, String> convertToStringMap(@NonNull Map<String, JsonValue> map) {
@@ -385,11 +383,12 @@ public abstract class JsonValueUtils {
     }
 
     /**
-     * Read a value expecting it to be of type JsonValue.JsonValueType.ARRAY.
-     * If the value is not found or the type is not ARRAY, an empty list is returned
-     * @param jv the jsonValue that is an array (type is JsonValue.JsonValueType.ARRAY)
+     * Read a value expecting it to be of type {@link JsonValueType#ARRAY}.
+     * If the value is not found or the type is not ARRAY, null is returned
+     * Returns null if the array is empty
+     * @param jv the jsonValue that is an array (type is {@link JsonValueType#ARRAY})
      * @param converter a function that converts each value in the array to the desired type
-     * @return The List of JsonValues in the array or an empty list if the value was null or not an ARRAY
+     * @return The List of JsonValues in the array or null if the value was null or not an ARRAY
      * @param <T> the list type
      */
     @Nullable
@@ -397,15 +396,16 @@ public abstract class JsonValueUtils {
         if (jv == null || jv.array == null) {
             return null;
         }
-        return convertToList(jv.array, converter);
+        List<T> list = convertToList(jv.array, converter);
+        return list.size() == 0 ? null : list;
     }
 
     /**
-     * Read a value expecting it to be of type JsonValue.JsonValueType.ARRAY.
-     * If the value is not found or the type is not ARRAY, null is returned
-     * @param jv the jsonValue that is an array (type is JsonValue.JsonValueType.ARRAY)
+     * Read a value expecting it to be of type {@link JsonValueType#ARRAY}.
+     * If the value is not found or the type is not ARRAY, an empty list is returned
+     * @param jv the jsonValue that is an array (type is {@link JsonValueType#ARRAY})
      * @param converter a function that converts each value in the array to the desired type
-     * @return The List of JsonValues in the array or null if the value was null or not an ARRAY
+     * @return The List of JsonValues in the array or Collections.emptyList() if the value was null or not an ARRAY
      * @param <T> the list type
      */
     @NonNull
@@ -436,9 +436,9 @@ public abstract class JsonValueUtils {
     }
 
     /**
-     * Read a key's value expecting the value to be of type JsonValue.JsonValueType.ARRAY,
+     * Read a key's value expecting the value to be of type {@link JsonValueType#ARRAY},
      * If the key is not found or the type is not ARRAY, null is returned
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @return The list of JsonValues or null
      */
@@ -448,84 +448,135 @@ public abstract class JsonValueUtils {
     }
 
     /**
-     * Read a key's value expecting the value to be of type JsonValue.JsonValueType.ARRAY,
+     * Read a key's value expecting the value to be of type {@link JsonValueType#ARRAY},
      * If the key is not found or the type is not ARRAY, an empty list is returned
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
-     * @return The list of JsonValues in the array or EMPTY_ARRAY_LIST
+     * @return The list of JsonValues in the array or Collections.emptyList()
      */
     @NonNull
     public static List<JsonValue> readArrayOrEmpty(@Nullable JsonValue jv, @NonNull String key) {
         List<JsonValue> list = readArrayOrNull(jv, key);
-        return list == null ? EMPTY_ARRAY_LIST : list;
+        return list == null ? Collections.emptyList() : list;
     }
 
     /**
-     * Read a key's value expecting the value to be of type JsonValue.JsonValueType.ARRAY,
+     * Read a key's value expecting the value to be of type {@link JsonValueType#ARRAY},
      * If the key is not found or the type is not ARRAY, null is returned
      * If the value is not a string it is not included in the returned list.
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @return The list of strings in the array or null
      */
     @Nullable
     public static List<String> readStringListOrNull(@Nullable JsonValue jv, @NonNull String key) {
-        List<JsonValue> list = read(jv, key, null, JsonValueType.ARRAY, v -> v.array);
-        return list == null ? null : convertToStringList(list);
+        return readStringListOrNull(jv, key, false);
     }
 
     /**
-     * Read a key's value expecting the value to be of type JsonValue.JsonValueType.ARRAY,
+     * Read a key's value expecting the value to be of type {@link JsonValueType#ARRAY},
+     * If the key is not found or the type is not ARRAY, null is returned
+     * If the value is not a string it is not included in the returned list.
+     * Optionally ignores blank strings.
+     * Returns null if the array is empty
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
+     * @param key the key to look up
+     * @param ignoreBlank ignore blanks
+     * @return The list of strings in the array or null
+     */
+    @Nullable
+    public static List<String> readStringListOrNull(@Nullable JsonValue jv, @NonNull String key, boolean ignoreBlank) {
+        List<JsonValue> list = read(jv, key, null, JsonValueType.ARRAY, v -> v.array);
+        if (list == null) {
+            return null;
+        }
+        List<String> strings = convertToStringList(list, ignoreBlank);
+        return strings.size() == 0 ? null : strings;
+    }
+
+    /**
+     * Read a key's value expecting the value to be of type {@link }JsonValueType#ARRAY}.
      * If the key is not found or the type is not ARRAY, an empty list is returned
      * If the value is not a string it is not included in the returned list.
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @return The list of string in the array or Collections.emptyList()
      */
     @NonNull
     public static List<String> readStringListOrEmpty(@Nullable JsonValue jv, @NonNull String key) {
         List<JsonValue> source = read(jv, key, null, JsonValueType.ARRAY, v -> v.array);
-        return source == null ? Collections.emptyList() : convertToStringList(source);
+        return source == null ? Collections.emptyList() : convertToStringList(source, false);
     }
 
     /**
-     * Convert a list of JsonValue to a list of Strings. Ignores any JsonValue that is not a string.
+     * Read a key's value expecting the value to be of type {@link JsonValueType#ARRAY},
+     * If the key is not found or the type is not ARRAY, an empty list is returned
+     * If the value is not a string it is not included in the returned list.
+     * Optionally ignores blank strings.
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
+     * @param key the key to look up
+     * @param ignoreBlank ignore blanks
+     * @return The list of string in the array or Collections.emptyList()
+     */
+    @NonNull
+    public static List<String> readStringListOrEmpty(@Nullable JsonValue jv, @NonNull String key, boolean ignoreBlank) {
+        List<JsonValue> source = read(jv, key, null, JsonValueType.ARRAY, v -> v.array);
+        return source == null ? Collections.emptyList() : convertToStringList(source, ignoreBlank);
+    }
+
+    /**
+     * Convert a list of JsonValue to a list of Strings.
+     * Ignores any JsonValue that is not a {@link JsonValueType#STRING}
+     * Optionally ignores blank strings.
      * It does not stringify numbers!
      * @param source the source list
+     * @param ignoreBlank ignore blanks
      * @return the list of String
      */
     @NonNull
-    public static List<String> convertToStringList(@NonNull List<JsonValue> source) {
+    public static List<String> convertToStringList(@NonNull List<JsonValue> source, boolean ignoreBlank) {
         List<String> result = new ArrayList<>();
         for (JsonValue v : source) {
             if (v.string != null) {
-                result.add(v.string);
+                if (ignoreBlank) {
+                    if (!v.string.trim().isEmpty()) {
+                        result.add(v.string);
+                    }
+                }
+                else {
+                    result.add(v.string);
+                }
             }
         }
         return result;
     }
 
     /**
-     * Read a key's value expecting the value to be of type JsonValue.JsonValueType.ARRAY,
+     * Read a key's value expecting the value to be of type {@link JsonValueType#ARRAY},
      * If the key is not found or the type is not ARRAY, null is returned
      * If the value is not an integer it is not included in the returned list.
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * Returns null if the array is empty
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @return The list of integers in the array or null
      */
     @Nullable
     public static List<Integer> readIntegerListOrNull(@Nullable JsonValue jv, @NonNull String key) {
         List<JsonValue> source = read(jv, key, null, JsonValueType.ARRAY, v -> v.array);
-        return source == null ? null : convertToIntegerList(source);
+        if (source == null) {
+            return null;
+        }
+        List<Integer> list = convertToIntegerList(source);
+        return list.size() == 0 ? null : list;
     }
 
     /**
-     * Read a key's value expecting the value to be of type JsonValue.JsonValueType.ARRAY,
+     * Read a key's value expecting the value to be of type {@link JsonValueType#ARRAY},
      * If the key is not found or the type is not ARRAY, an empty list is returned
      * If the value is not an integer it is not included in the returned list.
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
-     * @return The list of string in the array or Collections.emptyList()
+     * @return The list of integers in the array or Collections.emptyList()
      */
     @NonNull
     public static List<Integer> readIntegerListOrEmpty(@Nullable JsonValue jv, @NonNull String key) {
@@ -551,26 +602,31 @@ public abstract class JsonValueUtils {
     }
 
     /**
-     * Read a key's value expecting the value to be of type JsonValue.JsonValueType.ARRAY,
+     * Read a key's value expecting the value to be of type {@link JsonValueType#ARRAY},
      * If the key is not found or the type is not ARRAY, null is returned
      * If the value is not an integer or long it is not included in the returned list.
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * Returns null if the array is empty
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @return The list of longs in the array or null
      */
     @Nullable
     public static List<Long> readLongListOrNull(@Nullable JsonValue jv, @NonNull String key) {
         List<JsonValue> source = read(jv, key, null, JsonValueType.ARRAY, v -> v.array);
-        return source == null ? null : convertToLongList(source);
+        if (source == null) {
+            return null;
+        }
+        List<Long> list = convertToLongList(source);
+        return list.size() == 0 ? null : list;
     }
 
     /**
-     * Read a key's value expecting the value to be of type JsonValue.JsonValueType.ARRAY,
+     * Read a key's value expecting the value to be of type {@link JsonValueType#ARRAY},
      * If the key is not found or the type is not ARRAY, an empty list is returned
      * If the value is not an integer or long it is not included in the returned list.
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
-     * @return The list of string in the array or Collections.emptyList()
+     * @return The list of longs in the array or Collections.emptyList()
      */
     @NonNull
     public static List<Long> readLongListOrEmpty(@Nullable JsonValue jv, @NonNull String key) {
@@ -596,11 +652,11 @@ public abstract class JsonValueUtils {
     }
 
     /**
-     * Read a key's value expecting the value to be of type JsonValue.JsonValueType.LONG,
-     * If the key is not found or the type is not ARRAY, null is returned
+     * Read a key's value expecting the val!ue to be of type {@link JsonValueType#INTEGER} or {@link JsonValueType#LONG}.
+     * If the key is not found or readable as a long, null is returned
      * If the value is not an integer or long it is not considered in the returned list.
      * The values are converted to a Duration assuming the value represents nanoseconds
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @return The list of Duration or null
      */
@@ -612,11 +668,11 @@ public abstract class JsonValueUtils {
 
 
     /**
-     * Read a key's value expecting the value to be of type JsonValue.JsonValueType.LONG,
-     * If the key is not found or the type is not ARRAY, an empty is returned
+     * Read a key's value expecting the value to be of type {@link JsonValueType#INTEGER} or {@link JsonValueType#LONG}.
+     * If the key is not found or readable as a long, an empty list is returned
      * If the value is not an integer or long it is not considered in the returned list.
      * The values are converted to a Duration assuming the value represents nanoseconds
-     * @param jv the jsonValue that is an object (type is JsonValue.JsonValueType.MAP)
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
      * @param key the key to look up
      * @return The list of Duration or Collections.emptyList()
      */
