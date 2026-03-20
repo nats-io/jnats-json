@@ -4,15 +4,17 @@
 
 This library is a JSON Parser built specifically for JNATS to avoid a 3rd party library dependency.
 
-It has been extracted and repackaged from the JNATS library since it is also used by the [jwt.java](https://github.com/nats-io/jwt.java) library.
-
-![3.0.6](https://img.shields.io/badge/Current_Release-3.0.6-27AAE0?style=for-the-badge)
-![3.0.7](https://img.shields.io/badge/Current_Snapshot-3.0.7--SNAPSHOT-27AAE0?style=for-the-badge)
+![3.0.7](https://img.shields.io/badge/Current_Release-3.0.7-27AAE0?style=for-the-badge)
+![3.0.8](https://img.shields.io/badge/Current_Snapshot-3.0.8--SNAPSHOT-27AAE0?style=for-the-badge)
 
 [![Build Main Badge](https://github.com/nats-io/jnats-json/actions/workflows/build-main.yml/badge.svg?event=push)](https://github.com/nats-io/jnats-json/actions/workflows/build-main.yml)
 [![Coverage Status](https://coveralls.io/repos/github/nats-io/jnats-json/badge?branch=main)](https://coveralls.io/github/nats-io/jnats-json?branch=main)
 [![Javadoc](http://javadoc.io/badge/io.nats/jnats-json.svg?branch=main)](http://javadoc.io/doc/io.nats/jnats-json?branch=main)
 [![License Apache 2](https://img.shields.io/badge/License-Apache2-blue)](https://www.apache.org/licenses/LICENSE-2.0)
+
+### IMPORTANT
+
+Until the minor version reaches 1, the api and behavior is subject to change.
 
 ### JDK Version
 
@@ -36,7 +38,7 @@ The examples shown use the Jdk 8 version. To use other versions, change the arti
 
 ```groovy
 dependencies {
-    implementation 'io.nats:jnats-json:3.0.6'
+    implementation 'io.nats:jnats-json:3.0.7'
 }
 ```
 
@@ -62,7 +64,7 @@ repositories {
 }
 
 dependencies {
-   implementation 'io.nats:jnats-json:3.0.7-SNAPSHOT'
+   implementation 'io.nats:jnats-json:3.0.8-SNAPSHOT'
 }
 ```
 
@@ -72,7 +74,7 @@ dependencies {
 <dependency>
     <groupId>io.nats</groupId>
     <artifactId>jnats-json</artifactId>
-    <version>3.0.6</version>
+    <version>3.0.7</version>
 </dependency>
 ```
 
@@ -106,7 +108,7 @@ If you need a snapshot version, you must enable snapshots and change your depend
 <dependency>
     <groupId>io.nats</groupId>
     <artifactId>jnats-json</artifactId>
-    <version>3.0.7-SNAPSHOT</version>
+    <version>3.0.8-SNAPSHOT</version>
 </dependency>
 ```
 
