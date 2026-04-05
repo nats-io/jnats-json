@@ -6,8 +6,6 @@ import io.nats.json.LazyJsonParser;
 import io.nats.json.LazyJsonValue;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +29,6 @@ public class ServerConfigLazy implements JsonSerializable {
         this.source = v;
     }
 
-    // -- Lazy getters: nothing is parsed until you call these --
     public String getName() { return readString(source, "name"); }
     public String getHost() { return readString(source, "host"); }
     public int getPort() { return readInteger(source, "port", 0); }
@@ -40,26 +37,8 @@ public class ServerConfigLazy implements JsonSerializable {
     public Duration getTimeout() { return readNanosAsDuration(source, "timeout"); }
     public List<String> getTags() { return readStringListOrEmpty(source, "tags"); }
     public Map<String, String> getMetadata() { return readStringMapOrNull(source, "metadata"); }
-
-    // -- Nested object: wrap on access. The placement {...} was skip-scanned during
-    //    the initial parse. It is only parsed when getPlacement() is called. --
-    public PlacementLazy getPlacement() {
-        LazyJsonValue pv = readValue(source, "placement");
-        return pv == null ? null : new PlacementLazy(pv);
-    }
-
-    // -- List of nested objects: the endpoints [...] was skip-scanned during parse.
-    //    Calling getEndpoints() triggers parsing the array one level. Each element
-    //    that is an object is itself an unresolved offset range until accessed. --
-    public List<EndpointLazy> getEndpoints() {
-        List<LazyJsonValue> evs = readArrayOrNull(source, "endpoints");
-        if (evs == null) return Collections.emptyList();
-        List<EndpointLazy> list = new ArrayList<>(evs.size());
-        for (LazyJsonValue ev : evs) {
-            list.add(new EndpointLazy(ev));
-        }
-        return Collections.unmodifiableList(list);
-    }
+    public PlacementLazy getPlacement() { return PlacementLazy.optionalInstance(readValue(source, "placement")); }
+    public List<EndpointLazy> getEndpoints() { return EndpointLazy.optionalListOf(readValue(source, "endpoints")); }
 
     @Override
     public String toJson() {
@@ -75,47 +54,5 @@ public class ServerConfigLazy implements JsonSerializable {
         addField(sb, "placement", getPlacement());
         addJsons(sb, "endpoints", getEndpoints());
         return endJson(sb).toString();
-    }
-
-    // ---- Nested: Placement ----
-    public static class PlacementLazy implements JsonSerializable {
-        private final LazyJsonValue source;
-
-        public PlacementLazy(LazyJsonValue v) {
-            this.source = v;
-        }
-
-        public String getCluster() { return readString(source, "cluster"); }
-        public List<String> getTags() { return readStringListOrEmpty(source, "tags"); }
-
-        @Override
-        public String toJson() {
-            StringBuilder sb = beginJson();
-            addField(sb, "cluster", getCluster());
-            addStrings(sb, "tags", getTags());
-            return endJson(sb).toString();
-        }
-    }
-
-    // ---- Nested: Endpoint ----
-    public static class EndpointLazy implements JsonSerializable {
-        private final LazyJsonValue source;
-
-        public EndpointLazy(LazyJsonValue v) {
-            this.source = v;
-        }
-
-        public String getName() { return readString(source, "name"); }
-        public String getUrl() { return readString(source, "url"); }
-        public int getWeight() { return readInteger(source, "weight", 0); }
-
-        @Override
-        public String toJson() {
-            StringBuilder sb = beginJson();
-            addField(sb, "name", getName());
-            addField(sb, "url", getUrl());
-            addField(sb, "weight", getWeight());
-            return endJson(sb).toString();
-        }
     }
 }
