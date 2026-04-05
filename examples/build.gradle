@@ -1,0 +1,19 @@
+plugins {
+    id("java")
+}
+
+def tc = System.getenv("TARGET_COMPATIBILITY")
+def targetJavaVersion = tc == null ? JavaVersion.VERSION_1_8 : JavaVersion.toVersion(tc)
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = targetJavaVersion
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':')
+}
