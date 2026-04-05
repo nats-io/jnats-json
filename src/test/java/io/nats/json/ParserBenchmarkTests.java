@@ -24,10 +24,10 @@ import org.junit.jupiter.api.Test;
  * and ConsumerFields parsing.
  * <p>
  * Tagged "benchmark" and excluded from CI/CD. Run manually with:
- * <pre>gradle test --tests "*ParserBenchmark*"</pre>
+ * <pre>gradle test --tests "*ParserBenchmarkTests*"</pre>
  */
 @Tag("benchmark")
-public final class ParserBenchmark {
+public final class ParserBenchmarkTests {
 
     // Warm-up and measurement parameters
     private static final int WARMUP_ITERATIONS = 5_000;
@@ -374,7 +374,7 @@ public final class ParserBenchmark {
 
     // -----------------------------------------------------------------------
     // Benchmark entry points. Disabled so CI/CD skips them.
-    // Run manually: gradle test --tests "*ParserBenchmark*"
+    // Run manually: gradle test --tests "*ParserBenchmarkTests*"
     // -----------------------------------------------------------------------
 
     @Test
@@ -392,19 +392,19 @@ public final class ParserBenchmark {
         System.out.printf("=== StreamInfo %s (%d chars) -- eager vs indexed vs lazy ===%n", format, len);
         System.out.println();
         runDeepScenario("parse only", json, "config",
-            ParserBenchmark::readStreamEager0, ParserBenchmark::readStreamIndexed0, c -> {});
+            ParserBenchmarkTests::readStreamEager0, ParserBenchmarkTests::readStreamIndexed0, c -> {});
         runDeepScenario("10% fields", json, "config",
-            ParserBenchmark::readStreamEager10, ParserBenchmark::readStreamIndexed10,
-            ParserBenchmark::readStreamDeep10);
+            ParserBenchmarkTests::readStreamEager10, ParserBenchmarkTests::readStreamIndexed10,
+            ParserBenchmarkTests::readStreamDeep10);
         runDeepScenario("25% fields", json, "config",
-            ParserBenchmark::readStreamEager25, ParserBenchmark::readStreamIndexed25,
-            ParserBenchmark::readStreamDeep25);
+            ParserBenchmarkTests::readStreamEager25, ParserBenchmarkTests::readStreamIndexed25,
+            ParserBenchmarkTests::readStreamDeep25);
         runDeepScenario("50% fields", json, "config",
-            ParserBenchmark::readStreamEager50, ParserBenchmark::readStreamIndexed50,
-            ParserBenchmark::readStreamDeep50);
+            ParserBenchmarkTests::readStreamEager50, ParserBenchmarkTests::readStreamIndexed50,
+            ParserBenchmarkTests::readStreamDeep50);
         runDeepScenario("100% fields", json, "config",
-            ParserBenchmark::readStreamEager100, ParserBenchmark::readStreamIndexed100,
-            ParserBenchmark::readStreamDeep100);
+            ParserBenchmarkTests::readStreamEager100, ParserBenchmarkTests::readStreamIndexed100,
+            ParserBenchmarkTests::readStreamDeep100);
     }
 
     private void benchConsumerConfig(String json, String format, int len) throws Exception {
@@ -412,19 +412,19 @@ public final class ParserBenchmark {
         System.out.printf("=== ConsumerInfo %s (%d chars) -- eager vs indexed vs lazy ===%n", format, len);
         System.out.println();
         runDeepScenario("parse only", json, "config",
-            ParserBenchmark::readConsumerEager0, ParserBenchmark::readConsumerIndexed0, c -> {});
+            ParserBenchmarkTests::readConsumerEager0, ParserBenchmarkTests::readConsumerIndexed0, c -> {});
         runDeepScenario("10% fields", json, "config",
-            ParserBenchmark::readConsumerEager10, ParserBenchmark::readConsumerIndexed10,
-            ParserBenchmark::readConsumerDeep10);
+            ParserBenchmarkTests::readConsumerEager10, ParserBenchmarkTests::readConsumerIndexed10,
+            ParserBenchmarkTests::readConsumerDeep10);
         runDeepScenario("25% fields", json, "config",
-            ParserBenchmark::readConsumerEager25, ParserBenchmark::readConsumerIndexed25,
-            ParserBenchmark::readConsumerDeep25);
+            ParserBenchmarkTests::readConsumerEager25, ParserBenchmarkTests::readConsumerIndexed25,
+            ParserBenchmarkTests::readConsumerDeep25);
         runDeepScenario("50% fields", json, "config",
-            ParserBenchmark::readConsumerEager50, ParserBenchmark::readConsumerIndexed50,
-            ParserBenchmark::readConsumerDeep50);
+            ParserBenchmarkTests::readConsumerEager50, ParserBenchmarkTests::readConsumerIndexed50,
+            ParserBenchmarkTests::readConsumerDeep50);
         runDeepScenario("100% fields", json, "config",
-            ParserBenchmark::readConsumerEager100, ParserBenchmark::readConsumerIndexed100,
-            ParserBenchmark::readConsumerDeep100);
+            ParserBenchmarkTests::readConsumerEager100, ParserBenchmarkTests::readConsumerIndexed100,
+            ParserBenchmarkTests::readConsumerDeep100);
     }
 
     private void benchMinimal(String pretty, String compact, String name) throws Exception {
@@ -440,9 +440,9 @@ public final class ParserBenchmark {
                 v -> IndexedJsonValueUtils.readString(v, "name"),
                 v -> LazyJsonValueUtils.readString(v, "name"));
             runDeepScenario("all fields", json, null,
-                name.contains("stream") ? ParserBenchmark::readStreamMinEagerAll : ParserBenchmark::readConsumerMinEagerAll,
-                name.contains("stream") ? ParserBenchmark::readStreamMinIndexedAll : ParserBenchmark::readConsumerMinIndexedAll,
-                name.contains("stream") ? ParserBenchmark::readStreamMinDeepAll : ParserBenchmark::readConsumerMinDeepAll);
+                name.contains("stream") ? ParserBenchmarkTests::readStreamMinEagerAll : ParserBenchmarkTests::readConsumerMinEagerAll,
+                name.contains("stream") ? ParserBenchmarkTests::readStreamMinIndexedAll : ParserBenchmarkTests::readConsumerMinIndexedAll,
+                name.contains("stream") ? ParserBenchmarkTests::readStreamMinDeepAll : ParserBenchmarkTests::readConsumerMinDeepAll);
         }
     }
 
