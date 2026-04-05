@@ -608,4 +608,56 @@ public final class JsonValueUtilsTests {
         assertEquals(-1, getLong(EMPTY_MAP, -1));
         assertEquals(-1, getLong(EMPTY_ARRAY, -1));
     }
+
+    @Test
+    public void testListOfOrNullEmptyResult() {
+        // Array with elements that all convert to null — exercises list.size() == 0 branch
+        JsonValue arr = JsonParser.parseUnchecked("[42, 99]");
+        // converter returns null for every element (asking for strings from integers)
+        List<String> result = listOfOrNull(arr, v -> v.string);
+        assertNull(result);
+    }
+
+    @Test
+    public void testReadStringListOrNullNoStrings() throws Exception {
+        // Array exists but contains no string elements — exercises strings.size() == 0 branch
+        JsonValue v = JsonParser.parseUnchecked("{\"a\":[42, true]}");
+        assertNull(readStringListOrNull(v, "a"));
+        assertNull(readStringListOrNull(v, "a", false));
+        assertNull(readStringListOrNull(v, "a", true));
+    }
+
+    @Test
+    public void testConvertToStringListIgnoreBlank() throws Exception {
+        // exercises the ignoreBlank=true branch in convertToStringList
+        JsonValue v = JsonParser.parseUnchecked("{\"a\":[\"hello\", \" \", \"world\", \"\"]}");
+        List<String> withBlanks = readStringListOrNull(v, "a", false);
+        assertNotNull(withBlanks);
+        assertEquals(4, withBlanks.size());
+
+        List<String> noBlanks = readStringListOrNull(v, "a", true);
+        assertNotNull(noBlanks);
+        assertEquals(2, noBlanks.size());
+        assertEquals("hello", noBlanks.get(0));
+        assertEquals("world", noBlanks.get(1));
+    }
+
+    @Test
+    public void testReadStringListOrEmpty() throws Exception {
+        // source is not null — exercises the convertToStringList branch
+        JsonValue v = JsonParser.parseUnchecked("{\"a\":[\"x\",\"y\"]}");
+        List<String> result = readStringListOrEmpty(v, "a");
+        assertEquals(2, result.size());
+        assertEquals("x", result.get(0));
+        // source is null — exercises the empty list branch
+        assertTrue(readStringListOrEmpty(v, "missing").isEmpty());
+    }
+
+    @Test
+    public void testReadStringListOrEmptyIgnoreBlank() throws Exception {
+        JsonValue v = JsonParser.parseUnchecked("{\"a\":[\"x\",\" \",\"y\"]}");
+        List<String> result = readStringListOrEmpty(v, "a", true);
+        assertEquals(2, result.size());
+        assertTrue(readStringListOrEmpty(v, "missing", true).isEmpty());
+    }
 }

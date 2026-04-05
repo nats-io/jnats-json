@@ -670,6 +670,17 @@ public final class JsonParsingTests {
         validateMap(builder.toJsonValue(), false, false, false);
         validateMap(JsonParser.parseUnchecked(builder.toJson(), DECIMALS), true, false, false);
         validateMap(JsonParser.parseUnchecked(builder.toJson(), KEEP_NULLS, DECIMALS), true, true, false);
+
+        // Cover no-arg constructor and instance() factory
+        MapBuilder noArgBuilder = new MapBuilder();
+        noArgBuilder.put("k", "v");
+        assertNotNull(noArgBuilder.jv.map);
+        assertEquals(1, noArgBuilder.jv.map.size());
+
+        MapBuilder factoryBuilder = MapBuilder.instance();
+        factoryBuilder.put("k", "v");
+        assertNotNull(factoryBuilder.jv.map);
+        assertEquals(1, factoryBuilder.jv.map.size());
     }
 
     private static void validateMap(JsonValue v, boolean parsed, boolean parsedKeepNulls, boolean putNulls) {
@@ -728,6 +739,12 @@ public final class JsonParsingTests {
 
         ArrayBuilder builder5 = ArrayBuilder.instance(false).addItems(builder1.jv.array);
         validateArray(false, builder5.jv, false);
+
+        // Cover no-arg constructor
+        ArrayBuilder noArgBuilder = new ArrayBuilder();
+        noArgBuilder.add("item");
+        assertNotNull(noArgBuilder.jv.array);
+        assertEquals(1, noArgBuilder.jv.array.size());
     }
 
     private static ArrayBuilder makeArrayBuilder(boolean addNulls) {

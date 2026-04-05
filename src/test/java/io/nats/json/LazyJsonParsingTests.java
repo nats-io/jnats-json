@@ -364,6 +364,12 @@ public final class LazyJsonParsingTests {
     }
 
     @Test
+    public void testParseCharArrayWithStartIndex() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"x\":1}".toCharArray(), 0);
+        assertEquals(Integer.valueOf(1), v.getMap().get("x").getInteger());
+    }
+
+    @Test
     public void testParseStringWithStartIndex() throws Exception {
         LazyJsonValue v = LazyJsonParser.parse("   42", 3);
         assertEquals(Integer.valueOf(42), v.getInteger());
@@ -534,6 +540,20 @@ public final class LazyJsonParsingTests {
     public void testUnicodeKey() throws Exception {
         LazyJsonValue v = LazyJsonParser.parse("{\"\\u0041B\":\"val\"}");
         assertEquals("val", v.getMap().get("AB").getString());
+    }
+
+    @Test
+    public void testUnicodeKeyUppercaseHex() throws Exception {
+        // \u00AB — uppercase A,B hits the 'A'-'F' branch in parseU()
+        LazyJsonValue v = LazyJsonParser.parse("{\"\\u00AB\":\"val\"}");
+        assertEquals("val", v.getMap().get("\u00AB").getString());
+    }
+
+    @Test
+    public void testUnicodeKeyLowercaseHex() throws Exception {
+        // \u00ab — lowercase a,b hits the 'a'-'f' branch in parseU()
+        LazyJsonValue v = LazyJsonParser.parse("{\"\\u00ab\":\"val\"}");
+        assertEquals("val", v.getMap().get("\u00ab").getString());
     }
 
     // -- String escape extraction --
@@ -1008,6 +1028,7 @@ public final class LazyJsonParsingTests {
         LazyJsonValue v = LazyJsonParser.parse("\"just a string\"");
         assertNull(LazyJsonValueUtils.readValue(v, "key"));
         assertNull(LazyJsonValueUtils.readString(v, "key"));
+        assertEquals("dflt", LazyJsonValueUtils.readString(v, "key", "dflt"));
         assertNull(LazyJsonValueUtils.readInteger(v, "key"));
         assertNull(LazyJsonValueUtils.readLong(v, "key"));
         assertNull(LazyJsonValueUtils.readBoolean(v, "key"));
@@ -1115,5 +1136,101 @@ public final class LazyJsonParsingTests {
         JsonValue jv = v.toJsonValue();
         assertEquals(JsonValueType.LONG, jv.type);
         assertEquals(Long.valueOf(3000000000L), jv.l);
+    }
+
+    // -----------------------------------------------------------------------
+    // Utils: null jv, found-value branches, type-checked reads
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testUtilsReadValueWithNullJv() {
+        assertNull(LazyJsonValueUtils.readValue(null, "key"));
+        assertNull(LazyJsonValueUtils.readString(null, "key"));
+        assertEquals("dflt", LazyJsonValueUtils.readString(null, "key", "dflt"));
+        assertNull(LazyJsonValueUtils.readInteger(null, "key"));
+        assertEquals(0, LazyJsonValueUtils.readInteger(null, "key", 0));
+        assertNull(LazyJsonValueUtils.readLong(null, "key"));
+        assertEquals(0L, LazyJsonValueUtils.readLong(null, "key", 0L));
+        assertNull(LazyJsonValueUtils.readBoolean(null, "key"));
+        assertFalse(LazyJsonValueUtils.readBoolean(null, "key", false));
+        assertNull(LazyJsonValueUtils.readDate(null, "key"));
+        assertNull(LazyJsonValueUtils.readNanosAsDuration(null, "key"));
+        assertNull(LazyJsonValueUtils.readNanosAsDuration(null, "key", null));
+        assertNull(LazyJsonValueUtils.readBytes(null, "key"));
+        assertNull(LazyJsonValueUtils.readMapObjectOrNull(null, "key"));
+        assertNull(LazyJsonValueUtils.readMapMapOrNull(null, "key"));
+        assertNull(LazyJsonValueUtils.readArrayOrNull(null, "key"));
+        assertNull(LazyJsonValueUtils.readStringListOrNull(null, "key"));
+        assertNull(LazyJsonValueUtils.readIntegerListOrNull(null, "key"));
+        assertNull(LazyJsonValueUtils.readLongListOrNull(null, "key"));
+    }
+
+    @Test
+    public void testUtilsFoundValueBranches() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse(
+            "{\"i\":42,\"l\":3000000000,\"b\":true,\"s\":\"hello\",\"d\":1000000000}");
+        assertEquals(42, LazyJsonValueUtils.readInteger(v, "i", 0));
+        assertEquals(3000000000L, LazyJsonValueUtils.readLong(v, "l", 0L));
+        assertTrue(LazyJsonValueUtils.readBoolean(v, "b", false));
+        assertNotNull(LazyJsonValueUtils.readNanosAsDuration(v, "d"));
+        assertEquals(Duration.ofSeconds(1),
+            LazyJsonValueUtils.readNanosAsDuration(v, "d", Duration.ZERO));
+    }
+
+    @Test
+    public void testUtilsTypedReadKeyExistsWrongType() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"n\":42,\"s\":\"hello\"}");
+        assertEquals("dflt", LazyJsonValueUtils.readString(v, "n", "dflt"));
+        assertNull(LazyJsonValueUtils.readMapObjectOrNull(v, "s"));
+        assertNull(LazyJsonValueUtils.readArrayOrNull(v, "n"));
+    }
+
+    @Test
+    public void testUtilsStringListOrEmptyMissing() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"x\":1}");
+        assertTrue(LazyJsonValueUtils.readStringListOrEmpty(v, "missing").isEmpty());
+        assertTrue(LazyJsonValueUtils.readStringListOrEmpty(v, "missing", true).isEmpty());
+    }
+
+    @Test
+    public void testUtilsIntegerListOrNullEmpty() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"a\":[\"not_int\"]}");
+        assertNull(LazyJsonValueUtils.readIntegerListOrNull(v, "a"));
+    }
+
+    @Test
+    public void testUtilsLongListOrNullEmpty() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"a\":[\"not_long\"]}");
+        assertNull(LazyJsonValueUtils.readLongListOrNull(v, "a"));
+    }
+
+    @Test
+    public void testUtilsReadStringMapOrNullOnNonMap() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"s\":\"hello\"}");
+        assertNull(LazyJsonValueUtils.readStringMapOrNull(v, "s"));
+    }
+
+    @Test
+    public void testUtilsReadValueSuccess() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"k\":\"v\"}");
+        LazyJsonValue result = LazyJsonValueUtils.readValue(v, "k");
+        assertNotNull(result);
+        assertEquals("v", result.getString());
+    }
+
+    @Test
+    public void testUtilsTypedReadSuccess() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"s\":\"hello\",\"m\":{\"a\":1}}");
+        assertEquals("hello", LazyJsonValueUtils.readString(v, "s", "dflt"));
+        assertNotNull(LazyJsonValueUtils.readMapObjectOrNull(v, "m"));
+    }
+
+    @Test
+    public void testUtilsReadStringMapOrNullSuccess() throws Exception {
+        // Exercises the map != null path of readStringMapOrNull (line 252)
+        LazyJsonValue v = LazyJsonParser.parse("{\"m\":{\"k\":\"v\"}}");
+        Map<String, String> map = LazyJsonValueUtils.readStringMapOrNull(v, "m");
+        assertNotNull(map);
+        assertEquals("v", map.get("k"));
     }
 }

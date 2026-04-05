@@ -683,6 +683,18 @@ public final class IndexedJsonParsingTests {
     }
 
     @Test
+    public void testUnicodeMapKeyUppercaseHex() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"\\u00AB\":\"val\"}");
+        assertEquals("val", v.getMap().get("\u00AB").getString());
+    }
+
+    @Test
+    public void testUnicodeMapKeyLowercaseHex() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"\\u00ab\":\"val\"}");
+        assertEquals("val", v.getMap().get("\u00ab").getString());
+    }
+
+    @Test
     public void testMapKeyWithAllEscapes() throws Exception {
         String json = "{\"\\b\\f\\r\\n\\t\\\"\\'\\\\\\/\":\"val\"}";
         IndexedJsonValue v = IndexedJsonParser.parse(json);
@@ -1140,6 +1152,7 @@ public final class IndexedJsonParsingTests {
         IndexedJsonValue v = IndexedJsonParser.parse("\"just a string\"");
         assertNull(IndexedJsonValueUtils.readValue(v, "key"));
         assertNull(IndexedJsonValueUtils.readString(v, "key"));
+        assertEquals("dflt", IndexedJsonValueUtils.readString(v, "key", "dflt"));
         assertNull(IndexedJsonValueUtils.readInteger(v, "key"));
         assertNull(IndexedJsonValueUtils.readLong(v, "key"));
         assertNull(IndexedJsonValueUtils.readBoolean(v, "key"));
@@ -1252,5 +1265,101 @@ public final class IndexedJsonParsingTests {
         JsonValue jv = v.toJsonValue();
         assertEquals(JsonValueType.LONG, jv.type);
         assertEquals(Long.valueOf(3000000000L), jv.l);
+    }
+
+    // -----------------------------------------------------------------------
+    // Utils: null jv, found-value branches, type-checked reads
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testUtilsReadValueWithNullJv() {
+        assertNull(IndexedJsonValueUtils.readValue(null, "key"));
+        assertNull(IndexedJsonValueUtils.readString(null, "key"));
+        assertEquals("dflt", IndexedJsonValueUtils.readString(null, "key", "dflt"));
+        assertNull(IndexedJsonValueUtils.readInteger(null, "key"));
+        assertEquals(0, IndexedJsonValueUtils.readInteger(null, "key", 0));
+        assertNull(IndexedJsonValueUtils.readLong(null, "key"));
+        assertEquals(0L, IndexedJsonValueUtils.readLong(null, "key", 0L));
+        assertNull(IndexedJsonValueUtils.readBoolean(null, "key"));
+        assertFalse(IndexedJsonValueUtils.readBoolean(null, "key", false));
+        assertNull(IndexedJsonValueUtils.readDate(null, "key"));
+        assertNull(IndexedJsonValueUtils.readNanosAsDuration(null, "key"));
+        assertNull(IndexedJsonValueUtils.readNanosAsDuration(null, "key", null));
+        assertNull(IndexedJsonValueUtils.readBytes(null, "key"));
+        assertNull(IndexedJsonValueUtils.readMapObjectOrNull(null, "key"));
+        assertNull(IndexedJsonValueUtils.readMapMapOrNull(null, "key"));
+        assertNull(IndexedJsonValueUtils.readArrayOrNull(null, "key"));
+        assertNull(IndexedJsonValueUtils.readStringListOrNull(null, "key"));
+        assertNull(IndexedJsonValueUtils.readIntegerListOrNull(null, "key"));
+        assertNull(IndexedJsonValueUtils.readLongListOrNull(null, "key"));
+    }
+
+    @Test
+    public void testUtilsFoundValueBranches() throws Exception {
+        // Ensures the "value found" branch is hit for every read*WithDefault method
+        IndexedJsonValue v = IndexedJsonParser.parse(
+            "{\"i\":42,\"l\":3000000000,\"b\":true,\"s\":\"hello\",\"d\":1000000000}");
+        // readInteger with default — value IS found
+        assertEquals(42, IndexedJsonValueUtils.readInteger(v, "i", 0));
+        // readLong with default — value IS found
+        assertEquals(3000000000L, IndexedJsonValueUtils.readLong(v, "l", 0L));
+        // readBoolean with default — value IS found
+        assertTrue(IndexedJsonValueUtils.readBoolean(v, "b", false));
+        // readNanosAsDuration — value IS found
+        assertNotNull(IndexedJsonValueUtils.readNanosAsDuration(v, "d"));
+        // readNanosAsDuration with default — value IS found
+        assertEquals(Duration.ofSeconds(1),
+            IndexedJsonValueUtils.readNanosAsDuration(v, "d", Duration.ZERO));
+    }
+
+    @Test
+    public void testUtilsTypedReadKeyExistsWrongType() throws Exception {
+        // Key exists but has wrong type — exercises the v.type != requiredType branch
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"n\":42,\"s\":\"hello\"}");
+        // readString(key, dflt) requires STRING — "n" is INTEGER
+        assertEquals("dflt", IndexedJsonValueUtils.readString(v, "n", "dflt"));
+        // readMapObjectOrNull requires MAP — "s" is STRING
+        assertNull(IndexedJsonValueUtils.readMapObjectOrNull(v, "s"));
+        // readArrayOrNull requires ARRAY — "n" is INTEGER
+        assertNull(IndexedJsonValueUtils.readArrayOrNull(v, "n"));
+    }
+
+    @Test
+    public void testUtilsStringListOrEmptyMissing() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"x\":1}");
+        assertTrue(IndexedJsonValueUtils.readStringListOrEmpty(v, "missing").isEmpty());
+        assertTrue(IndexedJsonValueUtils.readStringListOrEmpty(v, "missing", true).isEmpty());
+    }
+
+    @Test
+    public void testUtilsIntegerListOrNullEmpty() throws Exception {
+        // Array exists but contains no integers — returns null
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"a\":[\"not_int\"]}");
+        assertNull(IndexedJsonValueUtils.readIntegerListOrNull(v, "a"));
+    }
+
+    @Test
+    public void testUtilsLongListOrNullEmpty() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"a\":[\"not_long\"]}");
+        assertNull(IndexedJsonValueUtils.readLongListOrNull(v, "a"));
+    }
+
+    @Test
+    public void testUtilsReadValueSuccess() throws Exception {
+        // Exercises the successful path of readValue (jv is MAP, key exists)
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"k\":\"v\"}");
+        IndexedJsonValue result = IndexedJsonValueUtils.readValue(v, "k");
+        assertNotNull(result);
+        assertEquals("v", result.getString());
+    }
+
+    @Test
+    public void testUtilsTypedReadSuccess() throws Exception {
+        // Exercises the typed read() where key exists and type matches (line 66-71)
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"s\":\"hello\",\"m\":{\"a\":1}}");
+        // readString with default — key found, type STRING matches
+        assertEquals("hello", IndexedJsonValueUtils.readString(v, "s", "dflt"));
+        // readMapObjectOrNull — key found, type MAP matches
+        assertNotNull(IndexedJsonValueUtils.readMapObjectOrNull(v, "m"));
     }
 }
