@@ -1130,4 +1130,127 @@ public final class IndexedJsonParsingTests {
         JsonValue jv = v.toJsonValue();
         assertEquals(JsonValueType.BIG_DECIMAL, jv.type);
     }
+
+    // -----------------------------------------------------------------------
+    // Utils: type mismatch, mixed-type arrays, non-MAP inputs
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testUtilsReadOnNonMapType() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("\"just a string\"");
+        assertNull(IndexedJsonValueUtils.readValue(v, "key"));
+        assertNull(IndexedJsonValueUtils.readString(v, "key"));
+        assertNull(IndexedJsonValueUtils.readInteger(v, "key"));
+        assertNull(IndexedJsonValueUtils.readLong(v, "key"));
+        assertNull(IndexedJsonValueUtils.readBoolean(v, "key"));
+        assertEquals(99, IndexedJsonValueUtils.readInteger(v, "key", 99));
+        assertEquals(99L, IndexedJsonValueUtils.readLong(v, "key", 99L));
+        assertTrue(IndexedJsonValueUtils.readBoolean(v, "key", true));
+    }
+
+    @Test
+    public void testUtilsReadStringOnIntegerValue() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"n\":42}");
+        // readString with default requires STRING type — n is INTEGER, so returns default
+        assertEquals("dflt", IndexedJsonValueUtils.readString(v, "n", "dflt"));
+    }
+
+    @Test
+    public void testUtilsConvertMixedArrayToIntegers() throws Exception {
+        // Array with strings mixed in — non-integers filtered out
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"a\":[1,\"skip\",3]}");
+        List<Integer> ints = IndexedJsonValueUtils.readIntegerListOrNull(v, "a");
+        assertNotNull(ints);
+        assertEquals(java.util.Arrays.asList(1, 3), ints);
+    }
+
+    @Test
+    public void testUtilsConvertMixedArrayToLongs() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"a\":[1,\"skip\",3]}");
+        List<Long> longs = IndexedJsonValueUtils.readLongListOrNull(v, "a");
+        assertNotNull(longs);
+        assertEquals(java.util.Arrays.asList(1L, 3L), longs);
+    }
+
+    @Test
+    public void testUtilsConvertMixedArrayToStrings() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"a\":[\"a\",42,\"b\"]}");
+        List<String> strs = IndexedJsonValueUtils.readStringListOrNull(v, "a");
+        assertNotNull(strs);
+        assertEquals(java.util.Arrays.asList("a", "b"), strs);
+    }
+
+    @Test
+    public void testUtilsListOfOrNullOnNonArray() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("42");
+        assertNull(IndexedJsonValueUtils.listOfOrNull(v, IndexedJsonValue::getString));
+        assertTrue(IndexedJsonValueUtils.listOfOrEmpty(v, IndexedJsonValue::getString).isEmpty());
+    }
+
+    @Test
+    public void testUtilsListOfOrNullEmptyArray() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("[]");
+        assertNull(IndexedJsonValueUtils.listOfOrNull(v, IndexedJsonValue::getString));
+        assertTrue(IndexedJsonValueUtils.listOfOrEmpty(v, IndexedJsonValue::getString).isEmpty());
+    }
+
+    @Test
+    public void testUtilsReadNanosAsDurationList() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"d\":[1000000000,2000000000]}");
+        List<Duration> durations = IndexedJsonValueUtils.readNanosAsDurationListOrNull(v, "d");
+        assertNotNull(durations);
+        assertEquals(2, durations.size());
+        assertNull(IndexedJsonValueUtils.readNanosAsDurationListOrNull(v, "missing"));
+        assertTrue(IndexedJsonValueUtils.readNanosAsDurationListOrEmpty(v, "missing").isEmpty());
+    }
+
+    @Test
+    public void testUtilsReadDateMissing() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"x\":1}");
+        assertNull(IndexedJsonValueUtils.readDate(v, "missing"));
+    }
+
+    @Test
+    public void testUtilsReadBytesMissing() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"x\":1}");
+        assertNull(IndexedJsonValueUtils.readBytes(v, "missing"));
+    }
+
+    @Test
+    public void testUtilsReadStringMapOrNullMissing() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"x\":1}");
+        assertNull(IndexedJsonValueUtils.readStringMapOrNull(v, "missing"));
+    }
+
+    // -----------------------------------------------------------------------
+    // Value: number boundary conversions
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGetIntegerFromLongOutOfRange() throws Exception {
+        // Long.MAX_VALUE doesn't fit in int — getInteger should return null
+        IndexedJsonValue v = IndexedJsonParser.parse(String.valueOf(Long.MAX_VALUE));
+        assertNotNull(v.getLong());
+        assertNull(v.getInteger());
+        // Long.MIN_VALUE also out of int range
+        IndexedJsonValue v2 = IndexedJsonParser.parse(String.valueOf(Long.MIN_VALUE));
+        assertNotNull(v2.getLong());
+        assertNull(v2.getInteger());
+    }
+
+    @Test
+    public void testHexFloatViaDecimals() throws Exception {
+        // Hex float: BigDecimal constructor fails, falls back to Double.parseDouble
+        IndexedJsonValue v = IndexedJsonParser.parse("0x1.0P-1074", JsonParser.Option.DECIMALS);
+        assertNotNull(v.getDouble());
+        assertEquals(JsonValueType.DOUBLE, v.toJsonValue().type);
+    }
+
+    @Test
+    public void testToJsonValueLong() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("3000000000");
+        JsonValue jv = v.toJsonValue();
+        assertEquals(JsonValueType.LONG, jv.type);
+        assertEquals(Long.valueOf(3000000000L), jv.l);
+    }
 }

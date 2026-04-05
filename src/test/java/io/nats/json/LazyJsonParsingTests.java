@@ -991,12 +991,129 @@ public final class LazyJsonParsingTests {
 
     @Test
     public void testSkippedArrayWithNestedObjects() throws Exception {
-        // Exercises skip scan for arrays containing objects
         String json = "{\"items\":[{\"a\":1},{\"b\":2},{\"c\":3}],\"x\":42}";
         LazyJsonValue v = LazyJsonParser.parse(json);
         assertEquals(Integer.valueOf(42), v.getMap().get("x").getInteger());
         List<LazyJsonValue> items = v.getMap().get("items").getArray();
         assertEquals(3, items.size());
         assertEquals(Integer.valueOf(2), items.get(1).getMap().get("b").getInteger());
+    }
+
+    // -----------------------------------------------------------------------
+    // Utils: type mismatch, mixed-type arrays, non-MAP inputs
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testUtilsReadOnNonMapType() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("\"just a string\"");
+        assertNull(LazyJsonValueUtils.readValue(v, "key"));
+        assertNull(LazyJsonValueUtils.readString(v, "key"));
+        assertNull(LazyJsonValueUtils.readInteger(v, "key"));
+        assertNull(LazyJsonValueUtils.readLong(v, "key"));
+        assertNull(LazyJsonValueUtils.readBoolean(v, "key"));
+        assertEquals(99, LazyJsonValueUtils.readInteger(v, "key", 99));
+        assertEquals(99L, LazyJsonValueUtils.readLong(v, "key", 99L));
+        assertTrue(LazyJsonValueUtils.readBoolean(v, "key", true));
+    }
+
+    @Test
+    public void testUtilsReadStringOnIntegerValue() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"n\":42}");
+        assertEquals("dflt", LazyJsonValueUtils.readString(v, "n", "dflt"));
+    }
+
+    @Test
+    public void testUtilsConvertMixedArrayToIntegers() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"a\":[1,\"skip\",3]}");
+        List<Integer> ints = LazyJsonValueUtils.readIntegerListOrNull(v, "a");
+        assertNotNull(ints);
+        assertEquals(Arrays.asList(1, 3), ints);
+    }
+
+    @Test
+    public void testUtilsConvertMixedArrayToLongs() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"a\":[1,\"skip\",3]}");
+        List<Long> longs = LazyJsonValueUtils.readLongListOrNull(v, "a");
+        assertNotNull(longs);
+        assertEquals(Arrays.asList(1L, 3L), longs);
+    }
+
+    @Test
+    public void testUtilsConvertMixedArrayToStrings() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"a\":[\"a\",42,\"b\"]}");
+        List<String> strs = LazyJsonValueUtils.readStringListOrNull(v, "a");
+        assertNotNull(strs);
+        assertEquals(Arrays.asList("a", "b"), strs);
+    }
+
+    @Test
+    public void testUtilsListOfOrNullOnNonArray() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("42");
+        assertNull(LazyJsonValueUtils.listOfOrNull(v, LazyJsonValue::getString));
+        assertTrue(LazyJsonValueUtils.listOfOrEmpty(v, LazyJsonValue::getString).isEmpty());
+    }
+
+    @Test
+    public void testUtilsListOfOrNullEmptyArray() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("[]");
+        assertNull(LazyJsonValueUtils.listOfOrNull(v, LazyJsonValue::getString));
+        assertTrue(LazyJsonValueUtils.listOfOrEmpty(v, LazyJsonValue::getString).isEmpty());
+    }
+
+    @Test
+    public void testUtilsReadNanosAsDurationList() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"d\":[1000000000,2000000000]}");
+        List<Duration> durations = LazyJsonValueUtils.readNanosAsDurationListOrNull(v, "d");
+        assertNotNull(durations);
+        assertEquals(2, durations.size());
+        assertNull(LazyJsonValueUtils.readNanosAsDurationListOrNull(v, "missing"));
+        assertTrue(LazyJsonValueUtils.readNanosAsDurationListOrEmpty(v, "missing").isEmpty());
+    }
+
+    @Test
+    public void testUtilsReadDateMissing() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"x\":1}");
+        assertNull(LazyJsonValueUtils.readDate(v, "missing"));
+    }
+
+    @Test
+    public void testUtilsReadBytesMissing() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"x\":1}");
+        assertNull(LazyJsonValueUtils.readBytes(v, "missing"));
+    }
+
+    @Test
+    public void testUtilsReadStringMapOrNullMissing() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"x\":1}");
+        assertNull(LazyJsonValueUtils.readStringMapOrNull(v, "missing"));
+    }
+
+    // -----------------------------------------------------------------------
+    // Value: number boundary conversions
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGetIntegerFromLongOutOfRange() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse(String.valueOf(Long.MAX_VALUE));
+        assertNotNull(v.getLong());
+        assertNull(v.getInteger());
+        LazyJsonValue v2 = LazyJsonParser.parse(String.valueOf(Long.MIN_VALUE));
+        assertNotNull(v2.getLong());
+        assertNull(v2.getInteger());
+    }
+
+    @Test
+    public void testHexFloatViaDecimals() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("0x1.0P-1074", JsonParser.Option.DECIMALS);
+        assertNotNull(v.getDouble());
+        assertEquals(JsonValueType.DOUBLE, v.toJsonValue().type);
+    }
+
+    @Test
+    public void testToJsonValueLong() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("3000000000");
+        JsonValue jv = v.toJsonValue();
+        assertEquals(JsonValueType.LONG, jv.type);
+        assertEquals(Long.valueOf(3000000000L), jv.l);
     }
 }
