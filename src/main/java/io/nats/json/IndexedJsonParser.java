@@ -39,31 +39,6 @@ import java.util.Map;
  */
 public class IndexedJsonParser {
 
-    /**
-     * Options for indexed parsing.
-     */
-    public enum Option {
-        /**
-         * Keep nulls when parsing (normally filtered from maps).
-         */
-        KEEP_NULLS,
-
-        /**
-         * Enable decimal/floating-point number support (BigDecimal, Double, etc.).
-         * <p>
-         * By default, the indexed parser assumes integers only — it skips
-         * decimal-indicator scanning during indexing and uses a fast parse path
-         * (direct char[] to long, no String allocation) when numbers are read.
-         * This is appropriate for NATS protocol messages where all numbers are
-         * integers (sequence numbers, byte counts, timestamps in nanos, etc.).
-         * <p>
-         * Set this option when the JSON may contain decimal numbers (e.g. 3.14,
-         * 1.5e10). The parser will then detect decimal notation and use
-         * BigDecimal/Double parsing at read time.
-         */
-        DECIMALS
-    }
-
     private static final boolean[] IS_DELIMITER = new boolean[128];
 
     static {
@@ -74,129 +49,66 @@ public class IndexedJsonParser {
 
     // ---- static entry points ----
 
-    /**
-     * Parse JSON from a char array.
-     */
     @NonNull
     public static IndexedJsonValue parse(char @Nullable [] json) throws JsonParseException {
         return new IndexedJsonParser(json, 0, false, true).parse();
     }
 
-    /**
-     * Parse JSON from a char array with a start index.
-     */
     @NonNull
     public static IndexedJsonValue parse(char @Nullable [] json, int startIndex) throws JsonParseException {
         return new IndexedJsonParser(json, startIndex, false, true).parse();
     }
 
-    /**
-     * Parse JSON from a char array with legacy JsonParser options.
-     */
     @NonNull
     public static IndexedJsonValue parse(char @Nullable [] json, JsonParser.@Nullable Option... options) throws JsonParseException {
-        boolean keepNulls = options != null && options.length > 0;
-        return new IndexedJsonParser(json, 0, keepNulls, true).parse();
-    }
-
-    /**
-     * Parse JSON from a char array with IndexedJsonParser options.
-     */
-    @NonNull
-    public static IndexedJsonValue parse(char @Nullable [] json, @Nullable Option... options) throws JsonParseException {
         return new IndexedJsonParser(json, 0, options).parse();
     }
 
-    /**
-     * Parse JSON from a String.
-     */
     @NonNull
     public static IndexedJsonValue parse(String json) throws JsonParseException {
         return new IndexedJsonParser(json.toCharArray(), 0, false, true).parse();
     }
 
-    /**
-     * Parse JSON from a String with a start index.
-     */
     @NonNull
     public static IndexedJsonValue parse(String json, int startIndex) throws JsonParseException {
         return new IndexedJsonParser(json.toCharArray(), startIndex, false, true).parse();
     }
 
-    /**
-     * Parse JSON from a String with legacy JsonParser options.
-     */
     @NonNull
     public static IndexedJsonValue parse(String json, JsonParser.@Nullable Option... options) throws JsonParseException {
-        boolean keepNulls = options != null && options.length > 0;
-        return new IndexedJsonParser(json.toCharArray(), 0, keepNulls, true).parse();
-    }
-
-    /**
-     * Parse JSON from a String with IndexedJsonParser options.
-     */
-    @NonNull
-    public static IndexedJsonValue parse(String json, @Nullable Option... options) throws JsonParseException {
         return new IndexedJsonParser(json.toCharArray(), 0, options).parse();
     }
 
-    /**
-     * Parse JSON from a byte array.
-     */
     @NonNull
     public static IndexedJsonValue parse(byte[] json) throws JsonParseException {
-        return new IndexedJsonParser(bytesToChars(json), 0, false, false).parse();
+        return new IndexedJsonParser(bytesToChars(json), 0, false, true).parse();
     }
 
-    /**
-     * Parse JSON from a byte array with legacy JsonParser options.
-     */
     @NonNull
     public static IndexedJsonValue parse(byte[] json, JsonParser.@Nullable Option... options) throws JsonParseException {
-        boolean keepNulls = options != null && options.length > 0;
-        return new IndexedJsonParser(bytesToChars(json), 0, keepNulls, false).parse();
-    }
-
-    /**
-     * Parse JSON from a byte array with IndexedJsonParser options.
-     */
-    @NonNull
-    public static IndexedJsonValue parse(byte[] json, @Nullable Option... options) throws JsonParseException {
         return new IndexedJsonParser(bytesToChars(json), 0, options).parse();
     }
 
-    /**
-     * Parse JSON from a char array, throwing RuntimeException instead of JsonParseException.
-     */
     @NonNull
     public static IndexedJsonValue parseUnchecked(char @Nullable [] json) {
         try { return parse(json); }
         catch (JsonParseException j) { throw new RuntimeException(j); }
     }
 
-    /**
-     * Parse JSON from a String, throwing RuntimeException instead of JsonParseException.
-     */
     @NonNull
     public static IndexedJsonValue parseUnchecked(String json) {
         try { return parse(json); }
         catch (JsonParseException j) { throw new RuntimeException(j); }
     }
 
-    /**
-     * Parse JSON from a byte array, throwing RuntimeException instead of JsonParseException.
-     */
     @NonNull
     public static IndexedJsonValue parseUnchecked(byte[] json) {
         try { return parse(json); }
         catch (JsonParseException j) { throw new RuntimeException(j); }
     }
 
-    /**
-     * Parse JSON from a String with IndexedJsonParser options, throwing RuntimeException.
-     */
     @NonNull
-    public static IndexedJsonValue parseUnchecked(String json, @Nullable Option... options) {
+    public static IndexedJsonValue parseUnchecked(String json, JsonParser.@Nullable Option... options) {
         try { return parse(json, options); }
         catch (JsonParseException j) { throw new RuntimeException(j); }
     }
@@ -237,13 +149,13 @@ public class IndexedJsonParser {
         next = 0;
     }
 
-    private IndexedJsonParser(char @Nullable [] json, int startIndex, @Nullable Option... options) {
+    private IndexedJsonParser(char @Nullable [] json, int startIndex, JsonParser.@Nullable Option... options) {
         boolean kn = false;
         boolean decimals = false;
         if (options != null) {
-            for (Option opt : options) {
-                if (opt == Option.KEEP_NULLS) kn = true;
-                else if (opt == Option.DECIMALS) decimals = true;
+            for (JsonParser.Option opt : options) {
+                if (opt == JsonParser.Option.KEEP_NULLS) kn = true;
+                else if (opt == JsonParser.Option.DECIMALS) decimals = true;
             }
         }
         this.keepNulls = kn;

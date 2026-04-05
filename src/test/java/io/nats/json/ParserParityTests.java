@@ -49,9 +49,9 @@ public final class ParserParityTests {
      * and assert the indexed and deep results match the eager result.
      */
     private void assertParity(String json) throws Exception {
-        JsonValue eager = JsonParser.parse(json);
-        IndexedJsonValue indexed = IndexedJsonParser.parse(json, IndexedJsonParser.Option.DECIMALS);
-        LazyJsonValue deep = LazyJsonParser.parse(json, LazyJsonParser.Option.DECIMALS);
+        JsonValue eager = JsonParser.parse(json, JsonParser.Option.DECIMALS);
+        IndexedJsonValue indexed = IndexedJsonParser.parse(json, JsonParser.Option.DECIMALS);
+        LazyJsonValue deep = LazyJsonParser.parse(json, JsonParser.Option.DECIMALS);
 
         assertEquals(eager, indexed.toJsonValue(),
             "Indexed mismatch for: " + truncate(json));
@@ -173,8 +173,8 @@ public final class ParserParityTests {
 
         // Without keep nulls
         JsonValue eager = JsonParser.parse(json);
-        IndexedJsonValue indexed = IndexedJsonParser.parse(json, IndexedJsonParser.Option.DECIMALS);
-        LazyJsonValue deep = LazyJsonParser.parse(json, LazyJsonParser.Option.DECIMALS);
+        IndexedJsonValue indexed = IndexedJsonParser.parse(json, JsonParser.Option.DECIMALS);
+        LazyJsonValue deep = LazyJsonParser.parse(json, JsonParser.Option.DECIMALS);
         assertEquals(eager, indexed.toJsonValue());
         assertEquals(eager, deep.toJsonValue());
         assertFalse(eager.map.containsKey("nullKey"));
@@ -182,7 +182,7 @@ public final class ParserParityTests {
         // With keep nulls
         eager = JsonParser.parse(json, JsonParser.Option.KEEP_NULLS);
         indexed = IndexedJsonParser.parse(json.toCharArray(), JsonParser.Option.KEEP_NULLS);
-        deep = LazyJsonParser.parse(json, LazyJsonParser.Option.KEEP_NULLS);
+        deep = LazyJsonParser.parse(json, JsonParser.Option.KEEP_NULLS);
         assertEquals(eager, indexed.toJsonValue());
         assertEquals(eager, deep.toJsonValue());
         assertTrue(eager.map.containsKey("nullKey"));
@@ -367,7 +367,7 @@ public final class ParserParityTests {
 
     @Test
     public void testStreamInfoResourceParity() throws Exception {
-        String json = ResourceUtils.resourceAsString("stream-info.json");
+        String json = ResourceUtils.resourceAsString("stream_info.json");
         assertParity(json);
     }
 
@@ -379,13 +379,13 @@ public final class ParserParityTests {
 
     @Test
     public void testStreamInfoV3Parity() throws Exception {
-        String json = ResourceUtils.resourceAsString("StreamInfo-v3.json");
+        String json = ResourceUtils.resourceAsString("stream_info.json");
         assertParityIntOnly(json);
     }
 
     @Test
     public void testConsumerInfoV3Parity() throws Exception {
-        String json = ResourceUtils.resourceAsString("ConsumerInfo-v3.json");
+        String json = ResourceUtils.resourceAsString("consumer_info.json");
         assertParityIntOnly(json);
     }
 

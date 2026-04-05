@@ -41,19 +41,6 @@ import java.util.Map;
  */
 public class LazyJsonParser {
 
-    /**
-     * Options for deep indexed parsing.
-     */
-    public enum Option {
-        /** Keep nulls when parsing (normally filtered from maps). */
-        KEEP_NULLS,
-        /**
-         * Enable decimal/floating-point number support.
-         * By default the parser assumes integers only for fastest parsing.
-         */
-        DECIMALS
-    }
-
     private static final boolean[] IS_DELIMITER = new boolean[128];
 
     static {
@@ -75,7 +62,7 @@ public class LazyJsonParser {
     }
 
     @NonNull
-    public static LazyJsonValue parse(char @Nullable [] json, @Nullable Option... options) throws JsonParseException {
+    public static LazyJsonValue parse(char @Nullable [] json, JsonParser.@Nullable Option... options) throws JsonParseException {
         boolean[] flags = parseOptions(options);
         int len = json == null ? 0 : json.length;
         return new LazyJsonParser(json, 0, len, flags[0], flags[1]).parse();
@@ -94,7 +81,7 @@ public class LazyJsonParser {
     }
 
     @NonNull
-    public static LazyJsonValue parse(String json, @Nullable Option... options) throws JsonParseException {
+    public static LazyJsonValue parse(String json, JsonParser.@Nullable Option... options) throws JsonParseException {
         boolean[] flags = parseOptions(options);
         char[] chars = json.toCharArray();
         return new LazyJsonParser(chars, 0, chars.length, flags[0], flags[1]).parse();
@@ -107,7 +94,7 @@ public class LazyJsonParser {
     }
 
     @NonNull
-    public static LazyJsonValue parse(byte[] json, @Nullable Option... options) throws JsonParseException {
+    public static LazyJsonValue parse(byte[] json, JsonParser.@Nullable Option... options) throws JsonParseException {
         boolean[] flags = parseOptions(options);
         char[] chars = bytesToChars(json);
         return new LazyJsonParser(chars, 0, chars.length, flags[0], flags[1]).parse();
@@ -120,7 +107,7 @@ public class LazyJsonParser {
     }
 
     @NonNull
-    public static LazyJsonValue parseUnchecked(String json, @Nullable Option... options) {
+    public static LazyJsonValue parseUnchecked(String json, JsonParser.@Nullable Option... options) {
         try { return parse(json, options); }
         catch (JsonParseException j) { throw new RuntimeException(j); }
     }
@@ -580,13 +567,13 @@ public class LazyJsonParser {
 
     // ---- options parsing ----
 
-    private static boolean[] parseOptions(@Nullable Option[] options) {
+    private static boolean[] parseOptions(JsonParser.@Nullable Option[] options) {
         boolean keepNulls = false;
         boolean integersOnly = true; // default
         if (options != null) {
-            for (Option opt : options) {
-                if (opt == Option.KEEP_NULLS) keepNulls = true;
-                else if (opt == Option.DECIMALS) integersOnly = false;
+            for (JsonParser.Option opt : options) {
+                if (opt == JsonParser.Option.KEEP_NULLS) keepNulls = true;
+                else if (opt == JsonParser.Option.DECIMALS) integersOnly = false;
             }
         }
         return new boolean[]{keepNulls, integersOnly};

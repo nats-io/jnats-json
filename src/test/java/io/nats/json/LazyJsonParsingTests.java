@@ -70,7 +70,7 @@ public final class LazyJsonParsingTests {
 
     @Test
     public void testBigDecimal() throws Exception {
-        LazyJsonValue v = LazyJsonParser.parse("3.14", LazyJsonParser.Option.DECIMALS);
+        LazyJsonValue v = LazyJsonParser.parse("3.14", JsonParser.Option.DECIMALS);
         assertEquals(new BigDecimal("3.14"), v.getBigDecimal());
     }
 
@@ -223,7 +223,7 @@ public final class LazyJsonParsingTests {
     @Test
     public void testKeepNulls() throws Exception {
         LazyJsonValue v = LazyJsonParser.parse("{\"a\":1,\"b\":null}",
-            LazyJsonParser.Option.KEEP_NULLS);
+            JsonParser.Option.KEEP_NULLS);
         assertTrue(v.getMap().containsKey("b"));
         assertSame(LazyJsonValue.NULL, v.getMap().get("b"));
     }
@@ -295,8 +295,8 @@ public final class LazyJsonParsingTests {
 
     @Test
     public void testStreamInfoV3Parity() throws Exception {
-        String json = ResourceUtils.resourceAsString("StreamInfo-v3.json");
-        // StreamInfo-v3.json has only integers — default mode works
+        String json = ResourceUtils.resourceAsString("stream_info.json");
+        // stream_info.json has only integers — default mode works
         JsonValue eager = JsonParser.parse(json);
         LazyJsonValue deep = LazyJsonParser.parse(json);
         assertEquals(eager, deep.toJsonValue());
@@ -304,7 +304,7 @@ public final class LazyJsonParsingTests {
 
     @Test
     public void testConsumerInfoV3Parity() throws Exception {
-        String json = ResourceUtils.resourceAsString("ConsumerInfo-v3.json");
+        String json = ResourceUtils.resourceAsString("consumer_info.json");
         JsonValue eager = JsonParser.parse(json);
         LazyJsonValue deep = LazyJsonParser.parse(json);
         assertEquals(eager, deep.toJsonValue());
@@ -314,7 +314,7 @@ public final class LazyJsonParsingTests {
 
     @Test
     public void testReadOnlyConfigFromStreamInfo() throws Exception {
-        String json = ResourceUtils.resourceAsString("StreamInfo-v3.json");
+        String json = ResourceUtils.resourceAsString("stream_info.json");
         LazyJsonValue v = LazyJsonParser.parse(json);
         // Read just a few config fields — cluster, state, sources etc. are never parsed
         LazyJsonValue config = LazyJsonValueUtils.readMapObjectOrNull(v, "config");
@@ -325,7 +325,7 @@ public final class LazyJsonParsingTests {
 
     @Test
     public void testReadOnlyConfigFromConsumerInfo() throws Exception {
-        String json = ResourceUtils.resourceAsString("ConsumerInfo-v3.json");
+        String json = ResourceUtils.resourceAsString("consumer_info.json");
         LazyJsonValue v = LazyJsonParser.parse(json);
         LazyJsonValue config = LazyJsonValueUtils.readMapObjectOrNull(v, "config");
         assertNotNull(config);
@@ -346,14 +346,14 @@ public final class LazyJsonParsingTests {
     @Test
     public void testParseFromBytesWithOptions() throws Exception {
         byte[] bytes = "{\"x\":null}".getBytes(StandardCharsets.UTF_8);
-        LazyJsonValue v = LazyJsonParser.parse(bytes, LazyJsonParser.Option.KEEP_NULLS);
+        LazyJsonValue v = LazyJsonParser.parse(bytes, JsonParser.Option.KEEP_NULLS);
         assertTrue(v.getMap().containsKey("x"));
     }
 
     @Test
     public void testParseCharArrayWithOptions() throws Exception {
         LazyJsonValue v = LazyJsonParser.parse("{\"x\":null}".toCharArray(),
-            LazyJsonParser.Option.KEEP_NULLS);
+            JsonParser.Option.KEEP_NULLS);
         assertTrue(v.getMap().containsKey("x"));
     }
 
@@ -390,7 +390,7 @@ public final class LazyJsonParsingTests {
     @Test
     public void testParseUncheckedWithOptions() {
         LazyJsonValue v = LazyJsonParser.parseUnchecked("{\"x\":3.14}",
-            LazyJsonParser.Option.DECIMALS);
+            JsonParser.Option.DECIMALS);
         assertEquals(new BigDecimal("3.14"), v.getMap().get("x").getBigDecimal());
     }
 
@@ -444,7 +444,7 @@ public final class LazyJsonParsingTests {
     @Test
     public void testParseStringWithOptions() throws Exception {
         LazyJsonValue v = LazyJsonParser.parse("{\"a\":null}",
-            LazyJsonParser.Option.KEEP_NULLS);
+            JsonParser.Option.KEEP_NULLS);
         assertTrue(v.getMap().containsKey("a"));
     }
 
@@ -622,21 +622,21 @@ public final class LazyJsonParsingTests {
 
     @Test
     public void testNegativeZeroDecimals() throws Exception {
-        LazyJsonValue v = LazyJsonParser.parse("-0", LazyJsonParser.Option.DECIMALS);
+        LazyJsonValue v = LazyJsonParser.parse("-0", JsonParser.Option.DECIMALS);
         assertNotNull(v.getDouble());
         assertEquals(-0.0, v.getDouble(), 0.0);
     }
 
     @Test
     public void testScientificNotation() throws Exception {
-        LazyJsonValue v = LazyJsonParser.parse("1.5e10", LazyJsonParser.Option.DECIMALS);
+        LazyJsonValue v = LazyJsonParser.parse("1.5e10", JsonParser.Option.DECIMALS);
         assertNotNull(v.getBigDecimal());
     }
 
     @Test
     public void testDecimalsBigInteger() throws Exception {
         String huge = "99999999999999999999999999999";
-        LazyJsonValue v = LazyJsonParser.parse(huge, LazyJsonParser.Option.DECIMALS);
+        LazyJsonValue v = LazyJsonParser.parse(huge, JsonParser.Option.DECIMALS);
         assertEquals(new BigInteger(huge), v.getBigInteger());
     }
 
@@ -681,7 +681,7 @@ public final class LazyJsonParsingTests {
 
     @Test
     public void testToJsonValueDouble() throws Exception {
-        JsonValue jv = LazyJsonParser.parse("-0", LazyJsonParser.Option.DECIMALS).toJsonValue();
+        JsonValue jv = LazyJsonParser.parse("-0", JsonParser.Option.DECIMALS).toJsonValue();
         assertEquals(JsonValueType.DOUBLE, jv.type);
     }
 
@@ -859,5 +859,144 @@ public final class LazyJsonParsingTests {
     public void testTrailingCommaInArray() throws Exception {
         LazyJsonValue v = LazyJsonParser.parse("[1,2,]");
         assertEquals(2, v.getArray().size());
+    }
+
+    // -----------------------------------------------------------------------
+    // Branch coverage: legitimate data paths
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGetIntWithValidValue() throws Exception {
+        assertEquals(42, LazyJsonParser.parse("42").getInt(99));
+    }
+
+    @Test
+    public void testGetLongDefaultWithValidValue() throws Exception {
+        assertEquals(3000000000L, LazyJsonParser.parse("3000000000").getLong(0L));
+    }
+
+    @Test
+    public void testGetIntegerFromLongInRange() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("100");
+        assertNotNull(v.getLong());
+        assertEquals(Integer.valueOf(100), v.getInteger());
+    }
+
+    @Test
+    public void testScientificNotationUpperE() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("1E5", JsonParser.Option.DECIMALS);
+        assertNotNull(v.getBigDecimal());
+    }
+
+    @Test
+    public void testScientificNotationLowerE() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("3.14e-2", JsonParser.Option.DECIMALS);
+        assertNotNull(v.getBigDecimal());
+    }
+
+    @Test
+    public void testNegativeZeroDecimalNotation() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("-0.0", JsonParser.Option.DECIMALS);
+        assertNotNull(v.getDouble());
+    }
+
+    @Test
+    public void testUnicodeEscapeUppercaseHex() throws Exception {
+        assertEquals("\u00AB", LazyJsonParser.parse("\"\\u00AB\"").getString());
+    }
+
+    @Test
+    public void testUnicodeEscapeLowercaseHex() throws Exception {
+        assertEquals("\u00ab", LazyJsonParser.parse("\"\\u00ab\"").getString());
+    }
+
+    @Test
+    public void testUnicodeEscapeDigitsOnly() throws Exception {
+        assertEquals("9", LazyJsonParser.parse("\"\\u0039\"").getString());
+    }
+
+    @Test
+    public void testParseNullCharArrayWithOptions() throws Exception {
+        assertSame(LazyJsonValue.NULL, LazyJsonParser.parse((char[]) null, JsonParser.Option.DECIMALS));
+    }
+
+    @Test
+    public void testParseStringWithDecimalsAndKeepNulls() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"a\":null,\"b\":1.5}",
+            JsonParser.Option.KEEP_NULLS, JsonParser.Option.DECIMALS);
+        assertTrue(v.getMap().containsKey("a"));
+        assertNotNull(v.getMap().get("b").getBigDecimal());
+    }
+
+    @Test
+    public void testNestedArrayResolvedLazily() throws Exception {
+        // Exercises the ARRAY branch in resolve()
+        LazyJsonValue v = LazyJsonParser.parse("{\"a\":{\"inner\":[1,2,3]}}");
+        LazyJsonValue inner = v.getMap().get("a").getMap().get("inner");
+        assertEquals(JsonValueType.ARRAY, inner.type);
+        assertEquals(3, inner.getArray().size());
+    }
+
+    @Test
+    public void testUtilsReadDateValid() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"d\":\"2021-01-25T20:09:10.6225191Z\"}");
+        assertNotNull(LazyJsonValueUtils.readDate(v, "d"));
+    }
+
+    @Test
+    public void testUtilsReadMapObjectOrEmptyWithData() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"m\":{\"k\":\"v\"}}");
+        LazyJsonValue m = LazyJsonValueUtils.readMapObjectOrEmpty(v, "m");
+        assertNotNull(m.getMap());
+        assertEquals(1, m.getMap().size());
+    }
+
+    @Test
+    public void testUtilsReadWithRequiredTypeMismatch() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"s\":\"hello\"}");
+        assertNull(LazyJsonValueUtils.readInteger(v, "s"));
+    }
+
+    @Test
+    public void testUtilsReadStringListEmptyArray() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"a\":[]}");
+        assertNull(LazyJsonValueUtils.readStringListOrNull(v, "a"));
+        assertTrue(LazyJsonValueUtils.readStringListOrEmpty(v, "a").isEmpty());
+    }
+
+    @Test
+    public void testUtilsReadIntegerListEmpty() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"a\":[]}");
+        assertNull(LazyJsonValueUtils.readIntegerListOrNull(v, "a"));
+    }
+
+    @Test
+    public void testUtilsReadLongListEmpty() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("{\"a\":[]}");
+        assertNull(LazyJsonValueUtils.readLongListOrNull(v, "a"));
+    }
+
+    @Test
+    public void testUtilsConvertToStringListWithStrings() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("[\"a\",\"b\"]");
+        List<String> list = LazyJsonValueUtils.convertToStringList(v.getArray(), false);
+        assertEquals(Arrays.asList("a", "b"), list);
+    }
+
+    @Test
+    public void testToJsonValueBigDecimalViaDecimals() throws Exception {
+        LazyJsonValue v = LazyJsonParser.parse("3.14", JsonParser.Option.DECIMALS);
+        assertEquals(JsonValueType.BIG_DECIMAL, v.toJsonValue().type);
+    }
+
+    @Test
+    public void testSkippedArrayWithNestedObjects() throws Exception {
+        // Exercises skip scan for arrays containing objects
+        String json = "{\"items\":[{\"a\":1},{\"b\":2},{\"c\":3}],\"x\":42}";
+        LazyJsonValue v = LazyJsonParser.parse(json);
+        assertEquals(Integer.valueOf(42), v.getMap().get("x").getInteger());
+        List<LazyJsonValue> items = v.getMap().get("items").getArray();
+        assertEquals(3, items.size());
+        assertEquals(Integer.valueOf(2), items.get(1).getMap().get("b").getInteger());
     }
 }

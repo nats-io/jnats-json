@@ -15,29 +15,47 @@
 package io.nats.json;
 
 import io.ResourceUtils;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
- * Benchmark comparing JsonParser (eager/copy) vs IndexedJsonParser (lazy/indexed)
- * for realistic workloads modeled after StreamFields and ConsumerFields parsing.
- *
- * Tests various read percentages: how much of the parsed data is actually accessed.
- * The indexed parser's advantage grows as less data is accessed, since it defers
- * string copying and number parsing until read time.
+ * Benchmark comparing JsonParser (eager), IndexedJsonParser (indexed), and
+ * LazyJsonParser (lazy) for realistic workloads modeled after StreamFields
+ * and ConsumerFields parsing.
+ * <p>
+ * Tagged "benchmark" and excluded from CI/CD. Run manually with:
+ * <pre>gradle test --tests "*ParserBenchmark*"</pre>
  */
+@Tag("benchmark")
 public final class ParserBenchmark {
 
     // Warm-up and measurement parameters
     private static final int WARMUP_ITERATIONS = 5_000;
-    private static final int MEASURE_ITERATIONS = 20_000;
+    private static final int MEASURE_ITERATIONS = 100_000;
 
-    // JSON payloads loaded once
-    private static final String STREAM_JSON;
-    private static final String CONSUMER_JSON;
+    // JSON payloads: both pretty (as stored on disk) and compact (as sent by NATS server)
+    private static final String STREAM_PRETTY;
+    private static final String CONSUMER_PRETTY;
+    private static final String STREAM_MIN_PRETTY;
+    private static final String CONSUMER_MIN_PRETTY;
+    private static final String STREAM_COMPACT;
+    private static final String CONSUMER_COMPACT;
+    private static final String STREAM_MIN_COMPACT;
+    private static final String CONSUMER_MIN_COMPACT;
 
     static {
-        STREAM_JSON = ResourceUtils.resourceAsString("StreamInfo-v3.json");
-        CONSUMER_JSON = ResourceUtils.resourceAsString("ConsumerInfo-v3.json");
+        STREAM_PRETTY = ResourceUtils.resourceAsString("stream_info.json");
+        CONSUMER_PRETTY = ResourceUtils.resourceAsString("consumer_info.json");
+        STREAM_MIN_PRETTY = ResourceUtils.resourceAsString("stream_info_minimal.json");
+        CONSUMER_MIN_PRETTY = ResourceUtils.resourceAsString("consumer_info_minimal.json");
+        STREAM_COMPACT = compact(STREAM_PRETTY);
+        CONSUMER_COMPACT = compact(CONSUMER_PRETTY);
+        STREAM_MIN_COMPACT = compact(STREAM_MIN_PRETTY);
+        CONSUMER_MIN_COMPACT = compact(CONSUMER_MIN_PRETTY);
+    }
+
+    private static String compact(String json) {
+        return JsonParser.parseUnchecked(json, JsonParser.Option.DECIMALS).toJson();
     }
 
     // -----------------------------------------------------------------------
@@ -335,7 +353,7 @@ public final class ParserBenchmark {
      * Returns ops/sec.
      */
     private static long benchIndexed(String json, String configKey, IndexedReader reader, int iterations,
-                                     IndexedJsonParser.Option... options) throws Exception {
+                                     JsonParser.Option... options) throws Exception {
         // Warmup
         for (int i = 0; i < WARMUP_ITERATIONS; i++) {
             IndexedJsonValue root = IndexedJsonParser.parse(json, options);
@@ -354,223 +372,78 @@ public final class ParserBenchmark {
         return (long) ((double) iterations / elapsed * 1_000_000_000L);
     }
 
-    private static void runScenario(String label, String json, String configKey,
-                                    EagerReader eagerReader, IndexedReader indexedReader) throws Exception {
-        long eagerOps = benchEager(json, configKey, eagerReader, MEASURE_ITERATIONS);
-        long indexedOps = benchIndexed(json, configKey, indexedReader, MEASURE_ITERATIONS);
-        double ratio = (double) indexedOps / eagerOps;
-        String marker = ratio > 1.0 ? "indexed wins" : "eager wins";
-        System.out.printf("  %-14s  eager: %,8d ops/s  indexed: %,8d ops/s  ratio: %.2fx  (%s)%n",
-            label, eagerOps, indexedOps, ratio, marker);
-    }
-
-    private static void runThreeWayScenario(String label, String json, String configKey,
-                                            EagerReader eagerReader, IndexedReader indexedReader) throws Exception {
-        long eagerOps = benchEager(json, configKey, eagerReader, MEASURE_ITERATIONS);
-        // Default mode (integers-only)
-        long intOnlyOps = benchIndexed(json, configKey, indexedReader, MEASURE_ITERATIONS);
-        // DECIMALS mode (full decimal support)
-        long decimalsOps = benchIndexed(json, configKey, indexedReader, MEASURE_ITERATIONS,
-            IndexedJsonParser.Option.DECIMALS);
-        double ratioInt = (double) intOnlyOps / eagerOps;
-        double ratioDec = (double) decimalsOps / eagerOps;
-        System.out.printf("  %-14s  eager: %,8d  default: %,8d (%.2fx)  decimals: %,8d (%.2fx)%n",
-            label, eagerOps, intOnlyOps, ratioInt, decimalsOps, ratioDec);
-    }
-
     // -----------------------------------------------------------------------
-    // Test entry point (run with: gradle test --tests "*ParserBenchmark*")
+    // Benchmark entry points. Disabled so CI/CD skips them.
+    // Run manually: gradle test --tests "*ParserBenchmark*"
     // -----------------------------------------------------------------------
 
     @Test
-    public void benchmarkStreamFields() throws Exception {
-        System.out.println();
-        System.out.println("=== StreamInfo Benchmark (parse + read config fields) ===");
-        System.out.println("  JSON size: " + STREAM_JSON.length() + " chars, " +
-            "warmup: " + WARMUP_ITERATIONS + ", measure: " + MEASURE_ITERATIONS);
-        System.out.println();
-
-        runScenario("0% (parse only)", STREAM_JSON, "config",
-            ParserBenchmark::readStreamEager0, ParserBenchmark::readStreamIndexed0);
-        runScenario("10% fields", STREAM_JSON, "config",
-            ParserBenchmark::readStreamEager10, ParserBenchmark::readStreamIndexed10);
-        runScenario("25% fields", STREAM_JSON, "config",
-            ParserBenchmark::readStreamEager25, ParserBenchmark::readStreamIndexed25);
-        runScenario("50% fields", STREAM_JSON, "config",
-            ParserBenchmark::readStreamEager50, ParserBenchmark::readStreamIndexed50);
-        runScenario("75% fields", STREAM_JSON, "config",
-            ParserBenchmark::readStreamEager75, ParserBenchmark::readStreamIndexed75);
-        runScenario("100% fields", STREAM_JSON, "config",
-            ParserBenchmark::readStreamEager100, ParserBenchmark::readStreamIndexed100);
-
-        System.out.println();
+    public void benchmarkAll() throws Exception {
+        benchStreamConfig(STREAM_PRETTY, "pretty", STREAM_PRETTY.length());
+        benchStreamConfig(STREAM_COMPACT, "compact", STREAM_COMPACT.length());
+        benchConsumerConfig(CONSUMER_PRETTY, "pretty", CONSUMER_PRETTY.length());
+        benchConsumerConfig(CONSUMER_COMPACT, "compact", CONSUMER_COMPACT.length());
+        benchMinimal(STREAM_MIN_PRETTY, STREAM_MIN_COMPACT, "stream_info_minimal");
+        benchMinimal(CONSUMER_MIN_PRETTY, CONSUMER_MIN_COMPACT, "consumer_info_minimal");
     }
 
-    @Test
-    public void benchmarkConsumerFields() throws Exception {
+    private void benchStreamConfig(String json, String format, int len) throws Exception {
         System.out.println();
-        System.out.println("=== ConsumerInfo Benchmark (parse + read config fields) ===");
-        System.out.println("  JSON size: " + CONSUMER_JSON.length() + " chars, " +
-            "warmup: " + WARMUP_ITERATIONS + ", measure: " + MEASURE_ITERATIONS);
+        System.out.printf("=== StreamInfo %s (%d chars) -- eager vs indexed vs lazy ===%n", format, len);
         System.out.println();
-
-        runScenario("0% (parse only)", CONSUMER_JSON, "config",
-            ParserBenchmark::readConsumerEager0, ParserBenchmark::readConsumerIndexed0);
-        runScenario("10% fields", CONSUMER_JSON, "config",
-            ParserBenchmark::readConsumerEager10, ParserBenchmark::readConsumerIndexed10);
-        runScenario("25% fields", CONSUMER_JSON, "config",
-            ParserBenchmark::readConsumerEager25, ParserBenchmark::readConsumerIndexed25);
-        runScenario("50% fields", CONSUMER_JSON, "config",
-            ParserBenchmark::readConsumerEager50, ParserBenchmark::readConsumerIndexed50);
-        runScenario("75% fields", CONSUMER_JSON, "config",
-            ParserBenchmark::readConsumerEager75, ParserBenchmark::readConsumerIndexed75);
-        runScenario("100% fields", CONSUMER_JSON, "config",
-            ParserBenchmark::readConsumerEager100, ParserBenchmark::readConsumerIndexed100);
-
-        System.out.println();
+        runDeepScenario("parse only", json, "config",
+            ParserBenchmark::readStreamEager0, ParserBenchmark::readStreamIndexed0, c -> {});
+        runDeepScenario("10% fields", json, "config",
+            ParserBenchmark::readStreamEager10, ParserBenchmark::readStreamIndexed10,
+            ParserBenchmark::readStreamDeep10);
+        runDeepScenario("25% fields", json, "config",
+            ParserBenchmark::readStreamEager25, ParserBenchmark::readStreamIndexed25,
+            ParserBenchmark::readStreamDeep25);
+        runDeepScenario("50% fields", json, "config",
+            ParserBenchmark::readStreamEager50, ParserBenchmark::readStreamIndexed50,
+            ParserBenchmark::readStreamDeep50);
+        runDeepScenario("100% fields", json, "config",
+            ParserBenchmark::readStreamEager100, ParserBenchmark::readStreamIndexed100,
+            ParserBenchmark::readStreamDeep100);
     }
 
-    @Test
-    public void benchmarkParseOnly() throws Exception {
+    private void benchConsumerConfig(String json, String format, int len) throws Exception {
         System.out.println();
-        System.out.println("=== Parse-Only Benchmark (no field reads at all) ===");
+        System.out.printf("=== ConsumerInfo %s (%d chars) -- eager vs indexed vs lazy ===%n", format, len);
         System.out.println();
-
-        // Stream
-        long eStream = benchEager(STREAM_JSON, null, v -> {}, MEASURE_ITERATIONS);
-        long iStream = benchIndexed(STREAM_JSON, null, v -> {}, MEASURE_ITERATIONS);
-        System.out.printf("  StreamInfo     eager: %,8d ops/s  indexed: %,8d ops/s  ratio: %.2fx%n",
-            eStream, iStream, (double) iStream / eStream);
-
-        // Consumer
-        long eConsumer = benchEager(CONSUMER_JSON, null, v -> {}, MEASURE_ITERATIONS);
-        long iConsumer = benchIndexed(CONSUMER_JSON, null, v -> {}, MEASURE_ITERATIONS);
-        System.out.printf("  ConsumerInfo   eager: %,8d ops/s  indexed: %,8d ops/s  ratio: %.2fx%n",
-            eConsumer, iConsumer, (double) iConsumer / iConsumer);
-
-        System.out.println();
+        runDeepScenario("parse only", json, "config",
+            ParserBenchmark::readConsumerEager0, ParserBenchmark::readConsumerIndexed0, c -> {});
+        runDeepScenario("10% fields", json, "config",
+            ParserBenchmark::readConsumerEager10, ParserBenchmark::readConsumerIndexed10,
+            ParserBenchmark::readConsumerDeep10);
+        runDeepScenario("25% fields", json, "config",
+            ParserBenchmark::readConsumerEager25, ParserBenchmark::readConsumerIndexed25,
+            ParserBenchmark::readConsumerDeep25);
+        runDeepScenario("50% fields", json, "config",
+            ParserBenchmark::readConsumerEager50, ParserBenchmark::readConsumerIndexed50,
+            ParserBenchmark::readConsumerDeep50);
+        runDeepScenario("100% fields", json, "config",
+            ParserBenchmark::readConsumerEager100, ParserBenchmark::readConsumerIndexed100,
+            ParserBenchmark::readConsumerDeep100);
     }
 
-    @Test
-    public void benchmarkFullRoundTrip() throws Exception {
-        System.out.println();
-        System.out.println("=== Full Round-Trip: parse + read ALL + also read top-level fields ===");
-        System.out.println("  (Simulates reading the entire StreamInfo/ConsumerInfo response)");
-        System.out.println();
-
-        // StreamInfo: read top-level fields (type, created, ts, state, cluster, etc.) + config
-        EagerReader streamFullEager = root -> {
-            JsonValueUtils.readString(root, "type");
-            JsonValueUtils.readDate(root, "created");
-            JsonValueUtils.readDate(root, "ts");
-            JsonValue config = JsonValueUtils.readValue(root, "config");
-            readStreamEager100(config);
-            // state sub-object
-            JsonValue state = JsonValueUtils.readValue(root, "state");
-            if (state != null) {
-                JsonValueUtils.readLong(state, "messages", 0);
-                JsonValueUtils.readLong(state, "bytes", 0);
-                JsonValueUtils.readLong(state, "first_seq", 0);
-                JsonValueUtils.readLong(state, "last_seq", 0);
-                JsonValueUtils.readLong(state, "consumer_count", 0);
-                JsonValueUtils.readLong(state, "num_subjects", 0);
-                JsonValueUtils.readLong(state, "num_deleted", 0);
-            }
-        };
-
-        IndexedReader streamFullIndexed = root -> {
-            IndexedJsonValueUtils.readString(root, "type");
-            IndexedJsonValueUtils.readDate(root, "created");
-            IndexedJsonValueUtils.readDate(root, "ts");
-            IndexedJsonValue config = IndexedJsonValueUtils.readValue(root, "config");
-            readStreamIndexed100(config);
-            IndexedJsonValue state = IndexedJsonValueUtils.readValue(root, "state");
-            if (state != null) {
-                IndexedJsonValueUtils.readLong(state, "messages", 0);
-                IndexedJsonValueUtils.readLong(state, "bytes", 0);
-                IndexedJsonValueUtils.readLong(state, "first_seq", 0);
-                IndexedJsonValueUtils.readLong(state, "last_seq", 0);
-                IndexedJsonValueUtils.readLong(state, "consumer_count", 0);
-                IndexedJsonValueUtils.readLong(state, "num_subjects", 0);
-                IndexedJsonValueUtils.readLong(state, "num_deleted", 0);
-            }
-        };
-
-        runScenario("StreamInfo", STREAM_JSON, null, streamFullEager, streamFullIndexed);
-
-        // ConsumerInfo: read top-level fields + config
-        EagerReader consumerFullEager = root -> {
-            JsonValueUtils.readString(root, "type");
-            JsonValueUtils.readString(root, "stream_name");
-            JsonValueUtils.readString(root, "name");
-            JsonValueUtils.readDate(root, "created");
-            JsonValueUtils.readDate(root, "ts");
-            JsonValueUtils.readLong(root, "num_pending", 0);
-            JsonValueUtils.readLong(root, "num_ack_pending", 0);
-            JsonValueUtils.readLong(root, "num_redelivered", 0);
-            JsonValueUtils.readBoolean(root, "paused", false);
-            JsonValueUtils.readNanosAsDuration(root, "pause_remaining");
-            JsonValue config = JsonValueUtils.readValue(root, "config");
-            readConsumerEager100(config);
-        };
-
-        IndexedReader consumerFullIndexed = root -> {
-            IndexedJsonValueUtils.readString(root, "type");
-            IndexedJsonValueUtils.readString(root, "stream_name");
-            IndexedJsonValueUtils.readString(root, "name");
-            IndexedJsonValueUtils.readDate(root, "created");
-            IndexedJsonValueUtils.readDate(root, "ts");
-            IndexedJsonValueUtils.readLong(root, "num_pending", 0);
-            IndexedJsonValueUtils.readLong(root, "num_ack_pending", 0);
-            IndexedJsonValueUtils.readLong(root, "num_redelivered", 0);
-            IndexedJsonValueUtils.readBoolean(root, "paused", false);
-            IndexedJsonValueUtils.readNanosAsDuration(root, "pause_remaining");
-            IndexedJsonValue config = IndexedJsonValueUtils.readValue(root, "config");
-            readConsumerIndexed100(config);
-        };
-
-        runScenario("ConsumerInfo", CONSUMER_JSON, null, consumerFullEager, consumerFullIndexed);
-
-        System.out.println();
-    }
-
-    @Test
-    public void benchmarkIntegersOnly() throws Exception {
-        System.out.println();
-        System.out.println("=== Default (integers-only) vs DECIMALS mode (eager vs default vs decimals) ===");
-        System.out.println("  All numbers are ops/s. Ratios are vs eager.");
-        System.out.println();
-
-        System.out.println("  -- StreamInfo (config fields) --");
-        runThreeWayScenario("0% (parse)", STREAM_JSON, "config",
-            ParserBenchmark::readStreamEager0, ParserBenchmark::readStreamIndexed0);
-        runThreeWayScenario("10% fields", STREAM_JSON, "config",
-            ParserBenchmark::readStreamEager10, ParserBenchmark::readStreamIndexed10);
-        runThreeWayScenario("25% fields", STREAM_JSON, "config",
-            ParserBenchmark::readStreamEager25, ParserBenchmark::readStreamIndexed25);
-        runThreeWayScenario("50% fields", STREAM_JSON, "config",
-            ParserBenchmark::readStreamEager50, ParserBenchmark::readStreamIndexed50);
-        runThreeWayScenario("75% fields", STREAM_JSON, "config",
-            ParserBenchmark::readStreamEager75, ParserBenchmark::readStreamIndexed75);
-        runThreeWayScenario("100% fields", STREAM_JSON, "config",
-            ParserBenchmark::readStreamEager100, ParserBenchmark::readStreamIndexed100);
-
-        System.out.println();
-        System.out.println("  -- ConsumerInfo (config fields) --");
-        runThreeWayScenario("0% (parse)", CONSUMER_JSON, "config",
-            ParserBenchmark::readConsumerEager0, ParserBenchmark::readConsumerIndexed0);
-        runThreeWayScenario("10% fields", CONSUMER_JSON, "config",
-            ParserBenchmark::readConsumerEager10, ParserBenchmark::readConsumerIndexed10);
-        runThreeWayScenario("25% fields", CONSUMER_JSON, "config",
-            ParserBenchmark::readConsumerEager25, ParserBenchmark::readConsumerIndexed25);
-        runThreeWayScenario("50% fields", CONSUMER_JSON, "config",
-            ParserBenchmark::readConsumerEager50, ParserBenchmark::readConsumerIndexed50);
-        runThreeWayScenario("75% fields", CONSUMER_JSON, "config",
-            ParserBenchmark::readConsumerEager75, ParserBenchmark::readConsumerIndexed75);
-        runThreeWayScenario("100% fields", CONSUMER_JSON, "config",
-            ParserBenchmark::readConsumerEager100, ParserBenchmark::readConsumerIndexed100);
-
-        System.out.println();
+    private void benchMinimal(String pretty, String compact, String name) throws Exception {
+        for (String[] entry : new String[][]{{"pretty", pretty}, {"compact", compact}}) {
+            String format = entry[0];
+            String json = entry[1];
+            System.out.println();
+            System.out.printf("=== %s %s (%d chars) -- eager vs indexed vs lazy ===%n", name, format, json.length());
+            System.out.println();
+            runDeepScenario("parse only", json, null, v -> {}, v -> {}, v -> {});
+            runDeepScenario("name only", json, null,
+                v -> JsonValueUtils.readString(v, "name"),
+                v -> IndexedJsonValueUtils.readString(v, "name"),
+                v -> LazyJsonValueUtils.readString(v, "name"));
+            runDeepScenario("all fields", json, null,
+                name.contains("stream") ? ParserBenchmark::readStreamMinEagerAll : ParserBenchmark::readConsumerMinEagerAll,
+                name.contains("stream") ? ParserBenchmark::readStreamMinIndexedAll : ParserBenchmark::readConsumerMinIndexedAll,
+                name.contains("stream") ? ParserBenchmark::readStreamMinDeepAll : ParserBenchmark::readConsumerMinDeepAll);
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -708,45 +581,85 @@ public final class ParserBenchmark {
             deepOps, (double) deepOps / eagerOps);
     }
 
-    @Test
-    public void benchmarkDeepIndexed() throws Exception {
-        System.out.println();
-        System.out.println("=== Deep Indexed: eager vs indexed vs deep (all ops/s, ratios vs eager) ===");
-        System.out.println();
+    // -----------------------------------------------------------------------
+    // Minimal JSON reader functions -- flat configs, no nesting
+    // -----------------------------------------------------------------------
 
-        System.out.println("  -- StreamInfo (parse + read config fields only) --");
-        runDeepScenario("0% (parse)", STREAM_JSON, "config",
-            ParserBenchmark::readStreamEager0, ParserBenchmark::readStreamIndexed0, c -> {});
-        runDeepScenario("10% fields", STREAM_JSON, "config",
-            ParserBenchmark::readStreamEager10, ParserBenchmark::readStreamIndexed10,
-            ParserBenchmark::readStreamDeep10);
-        runDeepScenario("25% fields", STREAM_JSON, "config",
-            ParserBenchmark::readStreamEager25, ParserBenchmark::readStreamIndexed25,
-            ParserBenchmark::readStreamDeep25);
-        runDeepScenario("50% fields", STREAM_JSON, "config",
-            ParserBenchmark::readStreamEager50, ParserBenchmark::readStreamIndexed50,
-            ParserBenchmark::readStreamDeep50);
-        runDeepScenario("100% fields", STREAM_JSON, "config",
-            ParserBenchmark::readStreamEager100, ParserBenchmark::readStreamIndexed100,
-            ParserBenchmark::readStreamDeep100);
-
-        System.out.println();
-        System.out.println("  -- ConsumerInfo (parse + read config fields only) --");
-        runDeepScenario("0% (parse)", CONSUMER_JSON, "config",
-            ParserBenchmark::readConsumerEager0, ParserBenchmark::readConsumerIndexed0, c -> {});
-        runDeepScenario("10% fields", CONSUMER_JSON, "config",
-            ParserBenchmark::readConsumerEager10, ParserBenchmark::readConsumerIndexed10,
-            ParserBenchmark::readConsumerDeep10);
-        runDeepScenario("25% fields", CONSUMER_JSON, "config",
-            ParserBenchmark::readConsumerEager25, ParserBenchmark::readConsumerIndexed25,
-            ParserBenchmark::readConsumerDeep25);
-        runDeepScenario("50% fields", CONSUMER_JSON, "config",
-            ParserBenchmark::readConsumerEager50, ParserBenchmark::readConsumerIndexed50,
-            ParserBenchmark::readConsumerDeep50);
-        runDeepScenario("100% fields", CONSUMER_JSON, "config",
-            ParserBenchmark::readConsumerEager100, ParserBenchmark::readConsumerIndexed100,
-            ParserBenchmark::readConsumerDeep100);
-
-        System.out.println();
+    // Stream minimal: all fields
+    private static void readStreamMinEagerAll(JsonValue v) {
+        JsonValueUtils.readString(v, "name");
+        JsonValueUtils.readStringListOrEmpty(v, "subjects");
+        JsonValueUtils.readString(v, "retention");
+        JsonValueUtils.readString(v, "storage");
+        JsonValueUtils.readInteger(v, "num_replicas", 1);
+        JsonValueUtils.readString(v, "discard");
+        JsonValueUtils.readNanosAsDuration(v, "duplicate_window");
+        JsonValueUtils.readValue(v, "consumer_limits");
+        JsonValueUtils.readStringMapOrNull(v, "metadata");
     }
+
+    private static void readStreamMinIndexedAll(IndexedJsonValue v) {
+        IndexedJsonValueUtils.readString(v, "name");
+        IndexedJsonValueUtils.readStringListOrEmpty(v, "subjects");
+        IndexedJsonValueUtils.readString(v, "retention");
+        IndexedJsonValueUtils.readString(v, "storage");
+        IndexedJsonValueUtils.readInteger(v, "num_replicas", 1);
+        IndexedJsonValueUtils.readString(v, "discard");
+        IndexedJsonValueUtils.readNanosAsDuration(v, "duplicate_window");
+        IndexedJsonValueUtils.readValue(v, "consumer_limits");
+        IndexedJsonValueUtils.readStringMapOrNull(v, "metadata");
+    }
+
+    private static void readStreamMinDeepAll(LazyJsonValue v) {
+        LazyJsonValueUtils.readString(v, "name");
+        LazyJsonValueUtils.readStringListOrEmpty(v, "subjects");
+        LazyJsonValueUtils.readString(v, "retention");
+        LazyJsonValueUtils.readString(v, "storage");
+        LazyJsonValueUtils.readInteger(v, "num_replicas", 1);
+        LazyJsonValueUtils.readString(v, "discard");
+        LazyJsonValueUtils.readNanosAsDuration(v, "duplicate_window");
+        LazyJsonValueUtils.readValue(v, "consumer_limits");
+        LazyJsonValueUtils.readStringMapOrNull(v, "metadata");
+    }
+
+    // Consumer minimal: all fields
+    private static void readConsumerMinEagerAll(JsonValue v) {
+        JsonValueUtils.readString(v, "name");
+        JsonValueUtils.readString(v, "deliver_policy");
+        JsonValueUtils.readString(v, "ack_policy");
+        JsonValueUtils.readNanosAsDuration(v, "ack_wait");
+        JsonValueUtils.readLong(v, "max_ack_pending", -1);
+        JsonValueUtils.readString(v, "replay_policy");
+        JsonValueUtils.readLong(v, "max_waiting", -1);
+        JsonValueUtils.readNanosAsDuration(v, "inactive_threshold");
+        JsonValueUtils.readInteger(v, "num_replicas", 0);
+        JsonValueUtils.readStringMapOrNull(v, "metadata");
+    }
+
+    private static void readConsumerMinIndexedAll(IndexedJsonValue v) {
+        IndexedJsonValueUtils.readString(v, "name");
+        IndexedJsonValueUtils.readString(v, "deliver_policy");
+        IndexedJsonValueUtils.readString(v, "ack_policy");
+        IndexedJsonValueUtils.readNanosAsDuration(v, "ack_wait");
+        IndexedJsonValueUtils.readLong(v, "max_ack_pending", -1);
+        IndexedJsonValueUtils.readString(v, "replay_policy");
+        IndexedJsonValueUtils.readLong(v, "max_waiting", -1);
+        IndexedJsonValueUtils.readNanosAsDuration(v, "inactive_threshold");
+        IndexedJsonValueUtils.readInteger(v, "num_replicas", 0);
+        IndexedJsonValueUtils.readStringMapOrNull(v, "metadata");
+    }
+
+    private static void readConsumerMinDeepAll(LazyJsonValue v) {
+        LazyJsonValueUtils.readString(v, "name");
+        LazyJsonValueUtils.readString(v, "deliver_policy");
+        LazyJsonValueUtils.readString(v, "ack_policy");
+        LazyJsonValueUtils.readNanosAsDuration(v, "ack_wait");
+        LazyJsonValueUtils.readLong(v, "max_ack_pending", -1);
+        LazyJsonValueUtils.readString(v, "replay_policy");
+        LazyJsonValueUtils.readLong(v, "max_waiting", -1);
+        LazyJsonValueUtils.readNanosAsDuration(v, "inactive_threshold");
+        LazyJsonValueUtils.readInteger(v, "num_replicas", 0);
+        LazyJsonValueUtils.readStringMapOrNull(v, "metadata");
+    }
+
 }

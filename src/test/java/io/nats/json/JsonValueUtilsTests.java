@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public final class JsonValueUtilsTests {
     private static final String TEST_JSON = ResourceUtils.resourceAsString("test.json");
-    private static final JsonValue TEST_JV = JsonParser.parseUnchecked(TEST_JSON);
+    private static final JsonValue TEST_JV = JsonParser.parseUnchecked(TEST_JSON, JsonParser.Option.DECIMALS);
     private static final String STRING_STRING = "Hello";
     private static final String DATE_STRING = "2021-01-25T20:09:10.6225191Z";
     private static final String BASE64_BASIC_STRING = "AGFiY2RlZgECBAg==";

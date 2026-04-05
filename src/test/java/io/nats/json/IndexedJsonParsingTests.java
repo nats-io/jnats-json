@@ -85,7 +85,7 @@ public final class IndexedJsonParsingTests {
 
     @Test
     public void testBigDecimalValue() throws Exception {
-        IndexedJsonValue v = IndexedJsonParser.parse("3.14159", IndexedJsonParser.Option.DECIMALS);
+        IndexedJsonValue v = IndexedJsonParser.parse("3.14159", JsonParser.Option.DECIMALS);
         assertNotNull(v.getBigDecimal());
         assertEquals(new BigDecimal("3.14159"), v.getBigDecimal());
     }
@@ -100,7 +100,7 @@ public final class IndexedJsonParsingTests {
 
     @Test
     public void testNegativeZero() throws Exception {
-        IndexedJsonValue v = IndexedJsonParser.parse("-0", IndexedJsonParser.Option.DECIMALS);
+        IndexedJsonValue v = IndexedJsonParser.parse("-0", JsonParser.Option.DECIMALS);
         Double d = v.getDouble();
         assertNotNull(d);
         assertEquals(-0.0, d, 0.0);
@@ -131,7 +131,7 @@ public final class IndexedJsonParsingTests {
     @Test
     public void testMixedArray() throws Exception {
         IndexedJsonValue v = IndexedJsonParser.parse("[\"hello\", 42, true, null, 3.14]",
-            IndexedJsonParser.Option.DECIMALS);
+            JsonParser.Option.DECIMALS);
         List<IndexedJsonValue> arr = v.getArray();
         assertNotNull(arr);
         assertEquals(5, arr.size()); // null is NOT dropped in arrays (same as JsonParser)
@@ -326,16 +326,16 @@ public final class IndexedJsonParsingTests {
     @Test
     public void testParseTestJson() throws Exception {
         String json = ResourceUtils.resourceAsString("test.json");
-        JsonValue eager = JsonParser.parse(json);
-        IndexedJsonValue indexed = IndexedJsonParser.parse(json, IndexedJsonParser.Option.DECIMALS);
+        JsonValue eager = JsonParser.parse(json, JsonParser.Option.DECIMALS);
+        IndexedJsonValue indexed = IndexedJsonParser.parse(json, JsonParser.Option.DECIMALS);
         assertEquals(eager, indexed.toJsonValue());
     }
 
     @Test
     public void testParseStreamInfoJson() throws Exception {
-        String json = ResourceUtils.resourceAsString("stream-info.json");
+        String json = ResourceUtils.resourceAsString("stream_info.json");
         JsonValue eager = JsonParser.parse(json);
-        IndexedJsonValue indexed = IndexedJsonParser.parse(json, IndexedJsonParser.Option.DECIMALS);
+        IndexedJsonValue indexed = IndexedJsonParser.parse(json, JsonParser.Option.DECIMALS);
         assertEquals(eager, indexed.toJsonValue());
     }
 
@@ -410,7 +410,7 @@ public final class IndexedJsonParsingTests {
     @Test
     public void testNumberNotParsedUntilAccessed() throws Exception {
         IndexedJsonValue v = IndexedJsonParser.parse("{\"a\":12345,\"b\":9.99}",
-            IndexedJsonParser.Option.DECIMALS);
+            JsonParser.Option.DECIMALS);
         Map<String, IndexedJsonValue> map = v.getMap();
 
         // Numbers are lazy — accessing them parses for the first time
@@ -475,8 +475,8 @@ public final class IndexedJsonParsingTests {
 
     @Test
     public void testIntegersOnlyStreamInfoV3() throws Exception {
-        // StreamInfo-v3.json has only integer numbers — perfect for the default mode
-        String json = ResourceUtils.resourceAsString("StreamInfo-v3.json");
+        // stream_info.json has only integer numbers — perfect for the default mode
+        String json = ResourceUtils.resourceAsString("stream_info.json");
         IndexedJsonValue v = IndexedJsonParser.parse(json);
         IndexedJsonValue config = IndexedJsonValueUtils.readMapObjectOrNull(v, "config");
         assertNotNull(config);
@@ -488,7 +488,7 @@ public final class IndexedJsonParsingTests {
 
     @Test
     public void testIntegersOnlyConsumerInfoV3() throws Exception {
-        String json = ResourceUtils.resourceAsString("ConsumerInfo-v3.json");
+        String json = ResourceUtils.resourceAsString("consumer_info.json");
         IndexedJsonValue v = IndexedJsonParser.parse(json);
         IndexedJsonValue config = IndexedJsonValueUtils.readMapObjectOrNull(v, "config");
         assertNotNull(config);
@@ -500,7 +500,7 @@ public final class IndexedJsonParsingTests {
     @Test
     public void testKeepNullsWithDefaultIntegersOnly() throws Exception {
         IndexedJsonValue v = IndexedJsonParser.parse("{\"a\":1,\"b\":null}".toCharArray(),
-            IndexedJsonParser.Option.KEEP_NULLS);
+            JsonParser.Option.KEEP_NULLS);
         Map<String, IndexedJsonValue> map = v.getMap();
         assertNotNull(map);
         assertEquals(Integer.valueOf(1), map.get("a").getInteger());
@@ -513,7 +513,7 @@ public final class IndexedJsonParsingTests {
     @Test
     public void testDecimalsMode() throws Exception {
         IndexedJsonValue v = IndexedJsonParser.parse("{\"pi\":3.14,\"n\":42}",
-            IndexedJsonParser.Option.DECIMALS);
+            JsonParser.Option.DECIMALS);
         assertEquals(new BigDecimal("3.14"), v.getMap().get("pi").getBigDecimal());
         assertEquals(Integer.valueOf(42), v.getMap().get("n").getInteger());
     }
@@ -540,7 +540,7 @@ public final class IndexedJsonParsingTests {
     @Test
     public void testParseCharArrayWithOptions() throws Exception {
         IndexedJsonValue v = IndexedJsonParser.parse("{\"a\":null}".toCharArray(),
-            IndexedJsonParser.Option.KEEP_NULLS);
+            JsonParser.Option.KEEP_NULLS);
         assertTrue(v.getMap().containsKey("a"));
     }
 
@@ -560,7 +560,7 @@ public final class IndexedJsonParsingTests {
     @Test
     public void testParseByteArrayWithOptions() throws Exception {
         byte[] json = "{\"x\":5}".getBytes(StandardCharsets.UTF_8);
-        IndexedJsonValue v = IndexedJsonParser.parse(json, IndexedJsonParser.Option.DECIMALS);
+        IndexedJsonValue v = IndexedJsonParser.parse(json, JsonParser.Option.DECIMALS);
         assertEquals(Integer.valueOf(5), v.getMap().get("x").getInteger());
     }
 
@@ -579,7 +579,7 @@ public final class IndexedJsonParsingTests {
     @Test
     public void testParseUncheckedStringWithOptions() {
         IndexedJsonValue v = IndexedJsonParser.parseUnchecked("{\"x\":6}",
-            IndexedJsonParser.Option.DECIMALS);
+            JsonParser.Option.DECIMALS);
         assertEquals(Integer.valueOf(6), v.getMap().get("x").getInteger());
     }
 
@@ -764,7 +764,7 @@ public final class IndexedJsonParsingTests {
     @Test
     public void testIntegerFromLongInRange() throws Exception {
         // Value stored as long but fits in int range
-        IndexedJsonValue v = IndexedJsonParser.parse("{\"n\":42}", IndexedJsonParser.Option.DECIMALS);
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"n\":42}", JsonParser.Option.DECIMALS);
         assertEquals(Integer.valueOf(42), v.getMap().get("n").getInteger());
     }
 
@@ -788,14 +788,14 @@ public final class IndexedJsonParsingTests {
 
     @Test
     public void testDecimalsModeScientificNotation() throws Exception {
-        IndexedJsonValue v = IndexedJsonParser.parse("1.5e10", IndexedJsonParser.Option.DECIMALS);
+        IndexedJsonValue v = IndexedJsonParser.parse("1.5e10", JsonParser.Option.DECIMALS);
         assertNotNull(v.getBigDecimal());
     }
 
     @Test
     public void testDecimalsModeBigInteger() throws Exception {
         String huge = "99999999999999999999999999999";
-        IndexedJsonValue v = IndexedJsonParser.parse(huge, IndexedJsonParser.Option.DECIMALS);
+        IndexedJsonValue v = IndexedJsonParser.parse(huge, JsonParser.Option.DECIMALS);
         assertNotNull(v.getBigInteger());
         assertEquals(new BigInteger(huge), v.getBigInteger());
     }
@@ -827,7 +827,7 @@ public final class IndexedJsonParsingTests {
 
     @Test
     public void testToJsonValueDouble() throws Exception {
-        IndexedJsonValue v = IndexedJsonParser.parse("-0", IndexedJsonParser.Option.DECIMALS);
+        IndexedJsonValue v = IndexedJsonParser.parse("-0", JsonParser.Option.DECIMALS);
         JsonValue jv = v.toJsonValue();
         assertEquals(JsonValueType.DOUBLE, jv.type);
     }
@@ -987,7 +987,147 @@ public final class IndexedJsonParsingTests {
     @Test
     public void testTrailingCommaInArray() throws Exception {
         IndexedJsonValue v = IndexedJsonParser.parse("[1,2,]");
-        // The array parser handles trailing commas
         assertEquals(2, v.getArray().size());
+    }
+
+    // -----------------------------------------------------------------------
+    // Branch coverage: legitimate data paths
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGetIntWithValidValue() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("42");
+        assertEquals(42, v.getInt(99)); // non-null path of getInt(dflt)
+    }
+
+    @Test
+    public void testGetLongDefaultWithValidValue() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("3000000000");
+        assertEquals(3000000000L, v.getLong(0L)); // non-null path of getLong(dflt)
+    }
+
+    @Test
+    public void testGetIntegerFromLongInRange() throws Exception {
+        // A number stored as LONG that fits in int range — exercises the LONG-to-int conversion in getInteger()
+        IndexedJsonValue v = IndexedJsonParser.parse("100");
+        // Force through the long path by reading getLong first, verifying it's an int too
+        assertNotNull(v.getLong());
+        assertNotNull(v.getInteger());
+        assertEquals(Integer.valueOf(100), v.getInteger());
+    }
+
+    @Test
+    public void testScientificNotationUpperE() throws Exception {
+        // Covers the 'E' branch in isDecimalNotation
+        IndexedJsonValue v = IndexedJsonParser.parse("1E5", JsonParser.Option.DECIMALS);
+        assertNotNull(v.getBigDecimal());
+    }
+
+    @Test
+    public void testScientificNotationLowerE() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("3.14e-2", JsonParser.Option.DECIMALS);
+        assertNotNull(v.getBigDecimal());
+    }
+
+    @Test
+    public void testNegativeZeroDecimalNotation() throws Exception {
+        // Covers the "-0" branch in isDecimalNotation
+        IndexedJsonValue v = IndexedJsonParser.parse("-0.0", JsonParser.Option.DECIMALS);
+        assertNotNull(v.getDouble());
+    }
+
+    @Test
+    public void testUnicodeEscapeUppercaseHex() throws Exception {
+        // Covers A-F hex digit branch in extractString
+        IndexedJsonValue v = IndexedJsonParser.parse("\"\\u00AB\"");
+        assertEquals("\u00AB", v.getString());
+    }
+
+    @Test
+    public void testUnicodeEscapeLowercaseHex() throws Exception {
+        // Covers a-f hex digit branch in extractString
+        IndexedJsonValue v = IndexedJsonParser.parse("\"\\u00ab\"");
+        assertEquals("\u00ab", v.getString());
+    }
+
+    @Test
+    public void testUnicodeEscapeDigitsOnly() throws Exception {
+        // Covers 0-9 hex digit branch
+        IndexedJsonValue v = IndexedJsonParser.parse("\"\\u0039\"");
+        assertEquals("9", v.getString());
+    }
+
+    @Test
+    public void testParseNullCharArrayWithOptions() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse((char[]) null, JsonParser.Option.DECIMALS);
+        assertSame(IndexedJsonValue.NULL, v);
+    }
+
+    @Test
+    public void testParseStringWithDecimalsOption() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"pi\":3.14}", JsonParser.Option.DECIMALS);
+        assertEquals(new BigDecimal("3.14"), v.getMap().get("pi").getBigDecimal());
+    }
+
+    @Test
+    public void testParseByteArrayWithKeepNullsAndDecimals() throws Exception {
+        byte[] json = "{\"a\":null,\"b\":1.5}".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        IndexedJsonValue v = IndexedJsonParser.parse(json, JsonParser.Option.KEEP_NULLS, JsonParser.Option.DECIMALS);
+        assertTrue(v.getMap().containsKey("a"));
+        assertNotNull(v.getMap().get("b").getBigDecimal());
+    }
+
+    @Test
+    public void testUtilsReadDateValid() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"d\":\"2021-01-25T20:09:10.6225191Z\"}");
+        assertNotNull(IndexedJsonValueUtils.readDate(v, "d"));
+    }
+
+    @Test
+    public void testUtilsReadMapObjectOrEmptyWithData() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"m\":{\"k\":\"v\"}}");
+        IndexedJsonValue m = IndexedJsonValueUtils.readMapObjectOrEmpty(v, "m");
+        assertNotNull(m.getMap());
+        assertEquals(1, m.getMap().size());
+    }
+
+    @Test
+    public void testUtilsReadWithRequiredTypeMismatch() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"s\":\"hello\"}");
+        // readInteger on a STRING value — type mismatch returns null
+        assertNull(IndexedJsonValueUtils.readInteger(v, "s"));
+    }
+
+    @Test
+    public void testUtilsReadStringListEmptyArray() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"a\":[]}");
+        assertNull(IndexedJsonValueUtils.readStringListOrNull(v, "a"));
+        assertTrue(IndexedJsonValueUtils.readStringListOrEmpty(v, "a").isEmpty());
+    }
+
+    @Test
+    public void testUtilsReadIntegerListEmpty() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"a\":[]}");
+        assertNull(IndexedJsonValueUtils.readIntegerListOrNull(v, "a"));
+    }
+
+    @Test
+    public void testUtilsReadLongListEmpty() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("{\"a\":[]}");
+        assertNull(IndexedJsonValueUtils.readLongListOrNull(v, "a"));
+    }
+
+    @Test
+    public void testUtilsConvertToStringListWithStrings() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("[\"a\",\"b\"]");
+        List<String> list = IndexedJsonValueUtils.convertToStringList(v.getArray(), false);
+        assertEquals(java.util.Arrays.asList("a", "b"), list);
+    }
+
+    @Test
+    public void testToJsonValueBigDecimalViaDecimals() throws Exception {
+        IndexedJsonValue v = IndexedJsonParser.parse("3.14", JsonParser.Option.DECIMALS);
+        JsonValue jv = v.toJsonValue();
+        assertEquals(JsonValueType.BIG_DECIMAL, jv.type);
     }
 }

@@ -1,0 +1,18 @@
+{
+  "name": "streamName",
+  "subjects": [
+    "sub0",
+    "sub1"
+  ],
+  "retention": "limits",
+  "storage": "file",
+  "num_replicas": 1,
+  "discard": "old",
+  "duplicate_window": 120000000000,
+  "consumer_limits": {},
+  "metadata": {
+    "_nats.ver": "2.14.0-dev",
+    "_nats.level": "4",
+    "_nats.req.level": "0"
+  }
+}
