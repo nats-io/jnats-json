@@ -1,0 +1,147 @@
+{
+  "type": "io.nats.jetstream.api.v1.stream_create_response",
+  "config": {
+    "name": "streamName",
+    "subjects": [
+      "sub0",
+      "sub1",
+      "x.\u003e"
+    ],
+    "retention": "limits",
+    "max_consumers": 1,
+    "max_msgs": 2,
+    "max_bytes": 3,
+    "discard": "old",
+    "max_age": 100000000000,
+    "max_msg_size": 4,
+    "storage": "memory",
+    "num_replicas": 5,
+    "duplicate_window": 120000000000,
+    "placement": {
+      "cluster": "placementclstr",
+      "tags": [
+        "ptag1",
+        "ptag2"
+      ]
+    },
+    "first_seq": 82942
+  },
+  "created": "2021-01-25T20:09:10.6225191Z",
+  "ts": "2023-08-29T19:33:21.163377Z",
+  "state": {
+    "messages": 11,
+    "bytes": 12,
+    "first_seq": 13,
+    "first_ts": "0001-01-01T00:00:00Z",
+    "last_seq": 14,
+    "last_ts": "0002-01-01T00:00:00Z",
+    "consumer_count": 15,
+    "num_subjects": 3,
+    "num_deleted": 6,
+    "subjects": {
+      "sub0": 1,
+      "sub1": 2,
+      "x.foo": 3
+    },
+    "deleted": [91, 92, 93, 94, 95, 96],
+    "lost": {
+      "msgs": [
+        101, 102, 103
+      ],
+      "bytes": 104
+    }
+  },
+  "cluster": {
+    "name": "clustername",
+    "raft_group": "raftgroupname",
+    "leader": "clusterleader",
+    "leader_since": "2025-08-29T19:33:21.163377Z",
+    "system_account": true,
+    "traffic_account": "trafficaccountname",
+    "replicas": [
+      {
+        "name": "name0",
+        "current": true,
+        "offline": true,
+        "active": 230000000000,
+        "lag": 3
+      },
+      {
+        "name": "name1",
+        "current": false,
+        "offline": false,
+        "active": 240000000000,
+        "lag": 4
+      }
+    ]
+  },
+  "mirror": {
+    "name": "mname",
+    "filter_subject": "mfs",
+    "lag": 16,
+    "active": 160000000000,
+    "external": {
+      "api": "api16",
+      "deliver": "dlvr16"
+    },
+    "subject_transforms": [
+      {"src":"16_st_src0","dest":"16_st_dest0"},
+      {"src":"16_st_src1","dest":"16_st_dest1"}
+    ]
+  },
+  "sources": [
+    {
+      "name": "sname17",
+      "filter_subject": "sfs17",
+      "lag": 17,
+      "active": 170000000000,
+      "external": {
+        "api": "api17",
+        "deliver": "dlvr17"
+      },
+      "subject_transforms": [
+        {"src":"17_st_src0","dest":"17_st_dest0"},
+        {"src":"17_st_src1","dest":"17_st_dest1"}
+      ]
+    },
+    {
+      "name": "sname18",
+      "filter_subject": "sfs18",
+      "lag": 18,
+      "active": -1,
+      "external": {
+        "api": "api18",
+        "deliver": "dlvr18"
+      },
+      "subject_transforms": [
+        {"src":"18_st_src0","dest":"18_st_dest0"},
+        {"src":"18_st_src1","dest":"18_st_dest1"}
+      ]
+    },
+    {
+      "name": "sname19",
+      "filter_subject": "sfs19",
+      "lag": 19,
+      "external": {
+        "api": "api19",
+        "deliver": "dlvr19"
+      },
+      "subject_transforms": [
+        {"src":"19_st_src0","dest":"19_st_dest0"},
+        {"src":"19_st_src1","dest":"19_st_dest1"}
+      ]
+    }
+  ],
+  "alternates": [
+    {
+      "name": "alt19",
+      "domain": "domain19",
+      "cluster": "cluster19"
+    },
+    {
+      "name": "alt20",
+      "domain": "domain20",
+      "cluster": "cluster20"
+    }
+  ]
+}

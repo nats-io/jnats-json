@@ -1,0 +1,92 @@
+{
+  "type": "io.nats.jetstream.api.v1.consumer_info_response",
+  "stream_name": "foo-stream",
+  "name": "foo-name",
+  "created": "2020-11-05T19:33:21.163377Z",
+  "ts": "2023-08-29T19:33:21.163377Z",
+  "config": {
+    "description": "foo-desc",
+    "durable_name": "foo-name",
+    "name": "foo-name",
+    "deliver_subject": "deliver.subject",
+    "deliver_policy": "all",
+    "deliver_group": "deliver-group",
+    "opt_start_seq": 42,
+    "opt_start_time": "2020-11-05T19:33:21.163377000Z",
+    "ack_policy": "all",
+    "ack_wait": 30000000000,
+    "max_deliver": 10,
+    "max_ack_pending": 42,
+    "replay_policy": "original",
+    "filter_subject": "sub.single",
+    "sample_freq": "sample_freq-value",
+    "rate_limit_bps": 73,
+    "idle_heartbeat": 20000000000,
+    "flow_control": true,
+    "max_waiting": 128,
+    "headers_only": true,
+    "max_batch":  55,
+    "max_bytes":  6666666666,
+    "max_expires": 40000000000,
+    "inactive_threshold": 50000000000,
+    "backoff": [1000000000, 2000000000, 3000000000],
+    "num_replicas": 5,
+    "mem_storage": true,
+    "metadata":{"meta-test-key":"meta-test-value"},
+    "priority_groups": ["pgroup1", "pgroup2"],
+    "priority_policy": "overflow",
+    "priority_timeout": 60000000000,
+    "pause_until": "2024-03-02T10:43:32.062847087Z"
+  },
+  "delivered": {
+    "consumer_seq": 1,
+    "stream_seq": 2,
+    "last_active": "2022-06-29T19:33:21.163377Z"
+  },
+  "ack_floor": {
+    "consumer_seq": 3,
+    "stream_seq": 4,
+    "last_active": "2022-06-29T20:33:21.163377Z"
+  },
+  "num_pending": 24,
+  "num_ack_pending": 42,
+  "num_redelivered": 42,
+  "paused": true,
+  "pause_remaining": 20000000000,
+  "cluster": {
+    "name": "clustername",
+    "raft_group": "raftgroupname",
+    "leader": "clusterleader",
+    "leader_since": "2025-08-29T19:33:21.163377Z",
+    "system_account": true,
+    "traffic_account": "trafficaccountname",
+    "replicas": [
+      {
+        "name": "name0",
+        "current": true,
+        "offline": true,
+        "active": 230000000000,
+        "lag": 3
+      },
+      {
+        "name": "name1",
+        "current": false,
+        "offline": false,
+        "active": 240000000000,
+        "lag": 4
+      }
+    ]
+  },
+  "priority_groups": [
+    {
+      "group": "group1",
+      "pinned_client_id": "pci1",
+      "pinned_ts": "2025-09-24T16:01:01.163377Z"
+    },
+    {
+      "group": "group2",
+      "pinned_client_id": "pci2",
+      "pinned_ts": "2025-09-24T16:02:02.163377Z"
+    }
+  ]
+}
