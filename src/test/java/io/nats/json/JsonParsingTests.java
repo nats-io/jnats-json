@@ -26,6 +26,7 @@ import java.util.*;
 
 import static io.nats.json.Encoding.jsonEncode;
 import static io.nats.json.JsonParseException.INVALID_VALUE;
+import static io.nats.json.JsonParser.Option.DECIMALS;
 import static io.nats.json.JsonParser.Option.KEEP_NULLS;
 import static io.nats.json.JsonParser.parse;
 import static io.nats.json.JsonParser.parseUnchecked;
@@ -130,13 +131,13 @@ public final class JsonParsingTests {
         validateMapTypes(oMap, oMap, true);
 
         // don't keep nulls
-        JsonValue parsed = parse(new JsonValue(oMap).toJson());
+        JsonValue parsed = parse(new JsonValue(oMap).toJson(), DECIMALS);
         assertNotNull(parsed.map);
         assertEquals(oMap.size() - 1, parsed.map.size());
         validateMapTypes(parsed.map, oMap, false);
 
         // keep nulls
-        parsed = parse(new JsonValue(oMap).toJson(), KEEP_NULLS);
+        parsed = parse(new JsonValue(oMap).toJson(), KEEP_NULLS, DECIMALS);
         assertNotNull(parsed.map);
         assertEquals(oMap.size(), parsed.map.size());
         validateMapTypes(parsed.map, oMap, true);
@@ -248,7 +249,7 @@ public final class JsonParsingTests {
         list.add(new JsonValue(new BigDecimal(Double.toString(Double.MAX_VALUE))));
         list.add(new JsonValue(new BigInteger(Long.toString(Long.MAX_VALUE))));
 
-        root = parse(new JsonValue(list).toJson());
+        root = parse(new JsonValue(list).toJson(), DECIMALS);
         assertNotNull(root.array);
         assertEquals(list.size(), root.array.size());
         array = root.array;
@@ -260,9 +261,9 @@ public final class JsonParsingTests {
         }
 
         List<JsonValue> mappedList = new JsonValue(list).array;
-        List<JsonValue> mappedList2 = parse(new JsonValue(mappedList).toJson()).array;
+        List<JsonValue> mappedList2 = parse(new JsonValue(mappedList).toJson(), DECIMALS).array;
         List<JsonValue> mappedArray = new JsonValue(list.toArray(new JsonValue[0])).array;
-        List<JsonValue> mappedArray2 = parse(new JsonValue(list.toArray(new JsonValue[0])).toJson()).array;
+        List<JsonValue> mappedArray2 = parse(new JsonValue(list.toArray(new JsonValue[0])).toJson(), DECIMALS).array;
         assertNotNull(mappedList);
         assertNotNull(mappedList2);
         assertNotNull(mappedArray);
@@ -431,7 +432,7 @@ public final class JsonParsingTests {
         parseUnchecked(json.getBytes(), 0, KEEP_NULLS);
 
         // misc
-        json = ResourceUtils.resourceAsString("stream-info.json");
+        json = ResourceUtils.resourceAsString("stream_info.json");
         JsonValue jv = JsonParser.parseUnchecked(json);
         printFormatted(jv);
         printFormatted(json);
@@ -481,21 +482,21 @@ public final class JsonParsingTests {
         assertEquals(JsonValueType.INTEGER, parse(Integer.toString(Integer.MIN_VALUE)).type);
         assertEquals(JsonValueType.LONG, parse(Long.toString((long)Integer.MAX_VALUE + 1)).type);
         assertEquals(JsonValueType.LONG, parse(Long.toString((long)Integer.MIN_VALUE - 1)).type);
-        assertEquals(JsonValueType.DOUBLE, parse("-0").type);
-        assertEquals(JsonValueType.DOUBLE, parse("-0.0").type);
-        assertEquals(JsonValueType.DOUBLE, parse("0.1d").type);
-        assertEquals(JsonValueType.DOUBLE, parse("0.f").type);
-        assertEquals(JsonValueType.DOUBLE, parse("0.1f").type);
-        assertEquals(JsonValueType.DOUBLE, parse("-0x1.fffp1").type);
-        assertEquals(JsonValueType.DOUBLE, parse("0x1.0P-1074").type);
-        assertEquals(JsonValueType.BIG_DECIMAL, parse("0.2").type);
-        assertEquals(JsonValueType.BIG_DECIMAL, parse("244273.456789012345").type);
-        assertEquals(JsonValueType.BIG_DECIMAL, parse("244273.456789012345").type);
-        assertEquals(JsonValueType.BIG_DECIMAL, parse("0.1234567890123456789").type);
-        assertEquals(JsonValueType.BIG_DECIMAL, parse("-24.42e7345").type);
-        assertEquals(JsonValueType.BIG_DECIMAL, parse("-24.42E7345").type);
-        assertEquals(JsonValueType.BIG_DECIMAL, parse("-.01").type);
-        assertEquals(JsonValueType.BIG_DECIMAL, parse("00.001").type);
+        assertEquals(JsonValueType.DOUBLE, parse("-0", DECIMALS).type);
+        assertEquals(JsonValueType.DOUBLE, parse("-0.0", DECIMALS).type);
+        assertEquals(JsonValueType.DOUBLE, parse("0.1d", DECIMALS).type);
+        assertEquals(JsonValueType.DOUBLE, parse("0.f", DECIMALS).type);
+        assertEquals(JsonValueType.DOUBLE, parse("0.1f", DECIMALS).type);
+        assertEquals(JsonValueType.DOUBLE, parse("-0x1.fffp1", DECIMALS).type);
+        assertEquals(JsonValueType.DOUBLE, parse("0x1.0P-1074", DECIMALS).type);
+        assertEquals(JsonValueType.BIG_DECIMAL, parse("0.2", DECIMALS).type);
+        assertEquals(JsonValueType.BIG_DECIMAL, parse("244273.456789012345", DECIMALS).type);
+        assertEquals(JsonValueType.BIG_DECIMAL, parse("244273.456789012345", DECIMALS).type);
+        assertEquals(JsonValueType.BIG_DECIMAL, parse("0.1234567890123456789", DECIMALS).type);
+        assertEquals(JsonValueType.BIG_DECIMAL, parse("-24.42e7345", DECIMALS).type);
+        assertEquals(JsonValueType.BIG_DECIMAL, parse("-24.42E7345", DECIMALS).type);
+        assertEquals(JsonValueType.BIG_DECIMAL, parse("-.01", DECIMALS).type);
+        assertEquals(JsonValueType.BIG_DECIMAL, parse("00.001", DECIMALS).type);
         assertEquals(JsonValueType.BIG_INTEGER, parse("12345678901234567890").type);
 
         assertTrue(JsonParser.isDecimalNotation("-0"));
@@ -644,8 +645,8 @@ public final class JsonParsingTests {
 
         builder.jv.toJson(); // COVERAGE
         validateMap(builder.toJsonValue(), false, false, true);
-        validateMap(JsonParser.parseUnchecked(builder.toJson()), true, false, true);
-        validateMap(JsonParser.parseUnchecked(builder.toJson(), KEEP_NULLS), true, true, true);
+        validateMap(JsonParser.parseUnchecked(builder.toJson(), DECIMALS), true, false, true);
+        validateMap(JsonParser.parseUnchecked(builder.toJson(), KEEP_NULLS, DECIMALS), true, true, true);
 
         //noinspection DataFlowIssue // NO ISSUE, WE KNOW jv.map is NOT NULL
         builder.jv.map.put("jvNull", JsonValue.NULL); // because the original map builder does not put nulls
@@ -667,8 +668,19 @@ public final class JsonParsingTests {
         }
 
         validateMap(builder.toJsonValue(), false, false, false);
-        validateMap(JsonParser.parseUnchecked(builder.toJson()), true, false, false);
-        validateMap(JsonParser.parseUnchecked(builder.toJson(), KEEP_NULLS), true, true, false);
+        validateMap(JsonParser.parseUnchecked(builder.toJson(), DECIMALS), true, false, false);
+        validateMap(JsonParser.parseUnchecked(builder.toJson(), KEEP_NULLS, DECIMALS), true, true, false);
+
+        // Cover no-arg constructor and instance() factory
+        MapBuilder noArgBuilder = new MapBuilder();
+        noArgBuilder.put("k", "v");
+        assertNotNull(noArgBuilder.jv.map);
+        assertEquals(1, noArgBuilder.jv.map.size());
+
+        MapBuilder factoryBuilder = MapBuilder.instance();
+        factoryBuilder.put("k", "v");
+        assertNotNull(factoryBuilder.jv.map);
+        assertEquals(1, factoryBuilder.jv.map.size());
     }
 
     private static void validateMap(JsonValue v, boolean parsed, boolean parsedKeepNulls, boolean putNulls) {
@@ -712,11 +724,11 @@ public final class JsonParsingTests {
     public void testValueUtilsArrayBuilder() {
         ArrayBuilder builder1 = makeArrayBuilder(true);
         validateArray(false, builder1.toJsonValue(), true);
-        validateArray(true, JsonParser.parseUnchecked(builder1.toJson()), true);
+        validateArray(true, JsonParser.parseUnchecked(builder1.toJson(), DECIMALS), true);
 
         ArrayBuilder builder2 = makeArrayBuilder(false);
         validateArray(false, builder2.toJsonValue(), false);
-        validateArray(true, JsonParser.parseUnchecked(builder2.toJson()), false);
+        validateArray(true, JsonParser.parseUnchecked(builder2.toJson(), DECIMALS), false);
 
         ArrayBuilder builder3 = ArrayBuilder.instance(true).addItems(builder1.jv.array);
         validateArray(false, builder3.jv, true);
@@ -727,6 +739,12 @@ public final class JsonParsingTests {
 
         ArrayBuilder builder5 = ArrayBuilder.instance(false).addItems(builder1.jv.array);
         validateArray(false, builder5.jv, false);
+
+        // Cover no-arg constructor
+        ArrayBuilder noArgBuilder = new ArrayBuilder();
+        noArgBuilder.add("item");
+        assertNotNull(noArgBuilder.jv.array);
+        assertEquals(1, noArgBuilder.jv.array.size());
     }
 
     private static ArrayBuilder makeArrayBuilder(boolean addNulls) {

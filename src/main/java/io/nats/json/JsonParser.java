@@ -33,13 +33,26 @@ import java.util.Map;
 public class JsonParser {
 
     /**
-     * Option for parsing.
+     * Options for parsing. Shared across all parser implementations
+     * (JsonParser, IndexedJsonParser, LazyJsonParser).
      */
     public enum Option {
         /**
-         * Keep nulls when parsing. Usually ignored
+         * Keep nulls when parsing. Normally null values are filtered from maps.
          */
-        KEEP_NULLS
+        KEEP_NULLS,
+
+        /**
+         * Enable decimal/floating-point number support (BigDecimal, Double, etc.).
+         * <p>
+         * By default, all parsers assume integers only. For the eager parser this
+         * means decimal numbers (containing '.', 'e', 'E', or bare "-0") will be
+         * rejected. For the indexed and lazy parsers, decimal detection is skipped
+         * during indexing and numbers are parsed via a fast integer path.
+         * <p>
+         * Set this option when the JSON may contain decimal numbers.
+         */
+        DECIMALS
     }
 
     private static final boolean[] IS_DELIMITER = new boolean[128];
@@ -356,6 +369,7 @@ public class JsonParser {
 
     private final char @NonNull [] json;
     private final boolean keepNulls;
+    private final boolean decimals;
     private final int len;
     private int idx;
     private int nextIdx;
@@ -387,7 +401,16 @@ public class JsonParser {
      * @param options options for how to parse
      */
     public JsonParser(char @Nullable [] json, int startIndex, @Nullable Option... options) {
-        keepNulls = options != null && options.length > 0; // KEEP_NULLS is currently the only option
+        boolean kn = false;
+        boolean dec = false;
+        if (options != null) {
+            for (Option opt : options) {
+                if (opt == Option.KEEP_NULLS) kn = true;
+                else if (opt == Option.DECIMALS) dec = true;
+            }
+        }
+        keepNulls = kn;
+        decimals = dec;
 
         if (json == null) {
             this.json = new char[0];
@@ -640,7 +663,7 @@ public class JsonParser {
         char initial = val.charAt(0);
         if ((initial >= '0' && initial <= '9') || initial == '-') {
 
-            if (isDecimalNotation(val)) {
+            if (decimals && isDecimalNotation(val)) {
                 // Use a BigDecimal all the time to keep the original
                 // representation. BigDecimal doesn't support -0.0, ensure we
                 // keep that by forcing a decimal.

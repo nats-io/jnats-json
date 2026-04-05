@@ -1,0 +1,16 @@
+{
+  "name": "min-name",
+  "deliver_policy": "all",
+  "ack_policy": "explicit",
+  "ack_wait": 30000000000,
+  "max_ack_pending": 1000,
+  "replay_policy": "instant",
+  "max_waiting": 512,
+  "inactive_threshold": 5000000000,
+  "num_replicas": 0,
+  "metadata": {
+    "_nats.ver": "2.14.0-dev",
+    "_nats.level": "4",
+    "_nats.req.level": "0"
+  }
+}
