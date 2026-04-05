@@ -257,6 +257,13 @@ the eager parser.
   over DECIMALS mode by skipping decimal-indicator scanning and using direct `char[]`-to-`long`
   parsing with no `String` allocation.
 
+## Examples
+
+The [examples](examples/) subproject demonstrates how to convert a plain POJO into a
+`JsonSerializable` class for each parser implementation, including handling of nested
+objects and lists of nested objects. See the [examples README](examples/README.md) for
+full details, code samples, and a field type mapping reference.
+
 ## License
 
 Unless otherwise noted, the NATS source files are distributed
