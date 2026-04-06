@@ -630,7 +630,7 @@ public class JsonParser {
                             workBuffer.append(c);
                             break;
                         default:
-                            throw new JsonParseException("Illegal escape.");
+                            throw new JsonParseException(JsonParseException.ILLEGAL_ESCAPE);
                     }
                     break;
                 default:
@@ -646,13 +646,13 @@ public class JsonParser {
         int code = 0;
         for (int i = 0; i < 4; i++) {
             char c = nextToken();
-            if (c == 0) throw new JsonParseException("Illegal escape.");
+            if (c == 0) throw new JsonParseException(JsonParseException.ILLEGAL_ESCAPE);
 
             int digit;
             if (c >= '0' && c <= '9') digit = c - '0';
             else if (c >= 'A' && c <= 'F') digit = c - 'A' + 10;
             else if (c >= 'a' && c <= 'f') digit = c - 'a' + 10;
-            else throw new JsonParseException("Illegal escape.");
+            else throw new JsonParseException(JsonParseException.ILLEGAL_ESCAPE);
 
             code = (code << 4) | digit;
         }

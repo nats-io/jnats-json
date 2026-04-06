@@ -201,8 +201,12 @@ public class IndexedJsonValue {
      */
     @Nullable
     public Boolean getBoolean() {
-        if (this == TRUE) return Boolean.TRUE;
-        if (this == FALSE) return Boolean.FALSE;
+        if (this == IndexedJsonValue.TRUE) {
+            return Boolean.TRUE;
+        }
+        if (this == IndexedJsonValue.FALSE) {
+            return Boolean.FALSE;
+        }
         return null;
     }
 
@@ -351,7 +355,9 @@ public class IndexedJsonValue {
             case BIG_INTEGER:
                 return numberToJsonValue();
             case MAP: {
-                if (map == null || map.isEmpty()) return JsonValue.EMPTY_MAP;
+                if (map == null || map.isEmpty()) {
+                    return JsonValue.EMPTY_MAP;
+                }
                 java.util.HashMap<String, JsonValue> m = new java.util.HashMap<>();
                 for (Map.Entry<String, IndexedJsonValue> e : map.entrySet()) {
                     m.put(e.getKey(), e.getValue().toJsonValue());
@@ -359,7 +365,9 @@ public class IndexedJsonValue {
                 return new JsonValue(m);
             }
             case ARRAY: {
-                if (array == null || array.isEmpty()) return JsonValue.EMPTY_ARRAY;
+                if (array == null || array.isEmpty()) {
+                    return JsonValue.EMPTY_ARRAY;
+                }
                 java.util.ArrayList<JsonValue> a = new java.util.ArrayList<>(array.size());
                 for (IndexedJsonValue child : array) {
                     a.add(child.toJsonValue());
@@ -378,7 +386,9 @@ public class IndexedJsonValue {
      */
     private JsonValue numberToJsonValue() {
         ensureNumber();
-        if (cachedNumberType == null) return JsonValue.NULL;
+        if (cachedNumberType == null) {
+            return JsonValue.NULL;
+        }
         switch (cachedNumberType) {
             case INTEGER:     return new JsonValue((int) cachedNumber);
             case LONG:        return new JsonValue((long) cachedNumber);
@@ -396,7 +406,9 @@ public class IndexedJsonValue {
      * Extract the string from the source array, processing escape sequences.
      */
     private String extractString() {
-        if (json == null) return "";
+        if (json == null) {
+            return "";
+        }
         if (!hasEscapes) {
             return new String(json, start, end - start);
         }
@@ -417,10 +429,18 @@ public class IndexedJsonValue {
                         for (int j = 0; j < 4 && i < end; j++) {
                             char h = json[i++];
                             int digit;
-                            if (h >= '0' && h <= '9') digit = h - '0';
-                            else if (h >= 'A' && h <= 'F') digit = h - 'A' + 10;
-                            else if (h >= 'a' && h <= 'f') digit = h - 'a' + 10;
-                            else { digit = 0; } // shouldn't happen; parser validated
+                            if (h >= '0' && h <= '9') {
+                                digit = h - '0';
+                            }
+                            else if (h >= 'A' && h <= 'F') {
+                                digit = h - 'A' + 10;
+                            }
+                            else if (h >= 'a' && h <= 'f') {
+                                digit = h - 'a' + 10;
+                            }
+                            else  { // shouldn't happen; parser validated
+                                digit = 0;
+                            }
                             code = (code << 4) | digit;
                         }
                         sb.append(Character.toChars(code));
@@ -447,7 +467,9 @@ public class IndexedJsonValue {
      * Parse the number from the source array on first access.
      */
     private void ensureNumber() {
-        if (cachedNumberType != null) return;
+        if (cachedNumberType != null) {
+            return;
+        }
         if (json == null || type == JsonValueType.STRING || type == JsonValueType.BOOL
             || type == JsonValueType.MAP || type == JsonValueType.ARRAY || type == JsonValueType.NULL) {
             return;
@@ -475,7 +497,9 @@ public class IndexedJsonValue {
             limit = Long.MIN_VALUE;
             i++;
         }
-        if (i == end) return; // shouldn't happen, parser validated
+        if (i == end) { // shouldn't happen, parser validated
+            return;
+        }
 
         // Parse digits — accumulate as negative to avoid overflow on Long.MIN_VALUE
         long result = 0;
