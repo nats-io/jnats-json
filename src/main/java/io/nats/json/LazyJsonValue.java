@@ -153,7 +153,9 @@ public class LazyJsonValue {
 
     @Nullable
     public Map<String, LazyJsonValue> getMap() {
-        if (type != JsonValueType.MAP) return null;
+        if (type != JsonValueType.MAP) {
+            return null;
+        }
         if (!resolved) {
             resolve();
         }
@@ -162,7 +164,9 @@ public class LazyJsonValue {
 
     @Nullable
     public List<LazyJsonValue> getArray() {
-        if (type != JsonValueType.ARRAY) return null;
+        if (type != JsonValueType.ARRAY) {
+            return null;
+        }
         if (!resolved) {
             resolve();
         }
@@ -183,7 +187,9 @@ public class LazyJsonValue {
 
     @Nullable
     public String getString() {
-        if (type != JsonValueType.STRING) return null;
+        if (type != JsonValueType.STRING) {
+            return null;
+        }
         if (cachedString == null) {
             cachedString = extractString();
         }
@@ -192,8 +198,12 @@ public class LazyJsonValue {
 
     @Nullable
     public Boolean getBoolean() {
-        if (this == TRUE) return Boolean.TRUE;
-        if (this == FALSE) return Boolean.FALSE;
+        if (this == TRUE) {
+            return Boolean.TRUE;
+        }
+        if (this == FALSE) {
+            return Boolean.FALSE;
+        }
         return null;
     }
 
@@ -220,8 +230,12 @@ public class LazyJsonValue {
     @Nullable
     public Long getLong() {
         ensureNumber();
-        if (cachedNumberType == JsonValueType.LONG) return (Long) cachedNumber;
-        if (cachedNumberType == JsonValueType.INTEGER) return ((Integer) cachedNumber).longValue();
+        if (cachedNumberType == JsonValueType.LONG) {
+            return (Long) cachedNumber;
+        }
+        if (cachedNumberType == JsonValueType.INTEGER) {
+            return ((Integer) cachedNumber).longValue();
+        }
         return null;
     }
 
@@ -272,7 +286,9 @@ public class LazyJsonValue {
                 return numberToJsonValue();
             case MAP: {
                 Map<String, LazyJsonValue> m = getMap();
-                if (m == null || m.isEmpty()) return JsonValue.EMPTY_MAP;
+                if (m == null || m.isEmpty()) {
+                    return JsonValue.EMPTY_MAP;
+                }
                 java.util.HashMap<String, JsonValue> out = new java.util.HashMap<>();
                 for (Map.Entry<String, LazyJsonValue> e : m.entrySet()) {
                     out.put(e.getKey(), e.getValue().toJsonValue());
@@ -281,7 +297,9 @@ public class LazyJsonValue {
             }
             case ARRAY: {
                 List<LazyJsonValue> a = getArray();
-                if (a == null || a.isEmpty()) return JsonValue.EMPTY_ARRAY;
+                if (a == null || a.isEmpty()) {
+                    return JsonValue.EMPTY_ARRAY;
+                }
                 java.util.ArrayList<JsonValue> out = new java.util.ArrayList<>(a.size());
                 for (LazyJsonValue child : a) {
                     out.add(child.toJsonValue());
@@ -295,7 +313,9 @@ public class LazyJsonValue {
 
     private JsonValue numberToJsonValue() {
         ensureNumber();
-        if (cachedNumberType == null) return JsonValue.NULL;
+        if (cachedNumberType == null) {
+            return JsonValue.NULL;
+        }
         switch (cachedNumberType) {
             case INTEGER:     return new JsonValue((int) cachedNumber);
             case LONG:        return new JsonValue((long) cachedNumber);
@@ -310,7 +330,9 @@ public class LazyJsonValue {
     // ---- internal: string extraction ----
 
     private String extractString() {
-        if (json == null) return "";
+        if (json == null) {
+            return "";
+        }
         if (!hasEscapes) {
             return new String(json, start, end - start);
         }
@@ -331,10 +353,18 @@ public class LazyJsonValue {
                         for (int j = 0; j < 4 && i < end; j++) {
                             char h = json[i++];
                             int digit;
-                            if (h >= '0' && h <= '9') digit = h - '0';
-                            else if (h >= 'A' && h <= 'F') digit = h - 'A' + 10;
-                            else if (h >= 'a' && h <= 'f') digit = h - 'a' + 10;
-                            else digit = 0;
+                            if (h >= '0' && h <= '9') {
+                                digit = h - '0';
+                            }
+                            else if (h >= 'A' && h <= 'F') {
+                                digit = h - 'A' + 10;
+                            }
+                            else if (h >= 'a' && h <= 'f') {
+                                digit = h - 'a' + 10;
+                            }
+                            else  {
+                                digit = 0;
+                            }
                             code = (code << 4) | digit;
                         }
                         sb.append(Character.toChars(code));
@@ -355,7 +385,9 @@ public class LazyJsonValue {
     // ---- internal: number parsing ----
 
     private void ensureNumber() {
-        if (cachedNumberType != null) return;
+        if (cachedNumberType != null) {
+            return;
+        }
         if (json == null || type == JsonValueType.STRING || type == JsonValueType.BOOL
             || type == JsonValueType.MAP || type == JsonValueType.ARRAY || type == JsonValueType.NULL) {
             return;
@@ -377,7 +409,9 @@ public class LazyJsonValue {
             limit = Long.MIN_VALUE;
             i++;
         }
-        if (i == end) return;
+        if (i == end) {
+            return;
+        }
 
         long result = 0;
         boolean overflow = false;
@@ -388,9 +422,15 @@ public class LazyJsonValue {
                 ensureNumberFull();
                 return;
             }
-            if (result < multmin) { overflow = true; break; }
+            if (result < multmin) {
+                overflow = true;
+                break;
+            }
             result *= 10;
-            if (result < limit + digit) { overflow = true; break; }
+            if (result < limit + digit) {
+                overflow = true;
+                break;
+            }
             result -= digit;
         }
 

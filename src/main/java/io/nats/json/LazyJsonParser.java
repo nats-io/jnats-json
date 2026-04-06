@@ -188,7 +188,9 @@ public class LazyJsonParser {
     @NonNull
     private LazyJsonValue parse() throws JsonParseException {
         char c = peekToken();
-        if (c == 0) return LazyJsonValue.NULL;
+        if (c == 0) {
+            return LazyJsonValue.NULL;
+        }
         if (c == '"') {
             nextToken();
             return nextStringValue();
@@ -234,7 +236,9 @@ public class LazyJsonParser {
             }
 
             c = nextToken();
-            if (c != ':') throw new JsonParseException("Expected a ':' after a key.");
+            if (c != ':') {
+                throw new JsonParseException("Expected a ':' after a key.");
+            }
 
             LazyJsonValue value = nextChildValue();
             if (value != LazyJsonValue.NULL || keepNulls) {
@@ -243,7 +247,9 @@ public class LazyJsonParser {
 
             switch (nextToken()) {
                 case ',':
-                    if (peekToken() == '}') return map;
+                    if (peekToken() == '}') {
+                        return map;
+                    }
                     break;
                 case '}':
                     return map;
@@ -276,7 +282,9 @@ public class LazyJsonParser {
      */
     private LazyJsonValue nextChildValue() throws JsonParseException {
         char c = peekToken();
-        if (c == 0) throw new JsonParseException("Unexpected end of data.");
+        if (c == 0) {
+            throw new JsonParseException("Unexpected end of data.");
+        }
         if (c == '"') {
             nextToken();
             return nextStringValue();
@@ -345,15 +353,21 @@ public class LazyJsonParser {
                 case '}':
                 case ']':
                     depth--;
-                    if (depth == 0) return;
+                    if (depth == 0) {
+                        return;
+                    }
                     break;
                 case '"':
                     // Skip string content — just need to handle \" correctly
                     while (idx < endBound) {
                         char sc = json[idx++];
-                        if (sc == '"') break;
+                        if (sc == '"') {
+                            break;
+                        }
                         if (sc == '\\') {
-                            if (idx < endBound) idx++; // skip escaped char
+                            if (idx < endBound) { // skip escaped char
+                                idx++;
+                            }
                         }
                     }
                     break;
@@ -369,7 +383,9 @@ public class LazyJsonParser {
         int stringStart = idx;
         boolean hasEscapes = false;
         while (true) {
-            if (idx >= endBound) throw new JsonParseException("Unterminated string.");
+            if (idx >= endBound) {
+                throw new JsonParseException("Unterminated string.");
+            }
             char c = json[idx++];
             switch (c) {
                 case '\n':
@@ -377,21 +393,26 @@ public class LazyJsonParser {
                     throw new JsonParseException("Unterminated string.");
                 case '\\':
                     hasEscapes = true;
-                    if (idx >= endBound) throw new JsonParseException("Unterminated string.");
+                    if (idx >= endBound) {
+                        throw new JsonParseException("Unterminated string.");
+                    }
                     char esc = json[idx++];
                     if (esc == 'u') {
                         for (int i = 0; i < 4; i++) {
-                            if (idx >= endBound) throw new JsonParseException("Illegal escape.");
+                            if (idx >= endBound) {
+                                throw new JsonParseException(JsonParseException.ILLEGAL_ESCAPE);
+                            }
                             char h = json[idx++];
-                            if (!((h >= '0' && h <= '9') || (h >= 'A' && h <= 'F') || (h >= 'a' && h <= 'f')))
-                                throw new JsonParseException("Illegal escape.");
+                            if (!((h >= '0' && h <= '9') || (h >= 'A' && h <= 'F') || (h >= 'a' && h <= 'f'))) {
+                                throw new JsonParseException(JsonParseException.ILLEGAL_ESCAPE);
+                            }
                         }
                     }
                     else {
                         switch (esc) {
                             case 'b': case 't': case 'n': case 'f': case 'r':
                             case '"': case '\'': case '\\': case '/': break;
-                            default: throw new JsonParseException("Illegal escape.");
+                            default: throw new JsonParseException(JsonParseException.ILLEGAL_ESCAPE);
                         }
                     }
                     break;
@@ -429,11 +450,13 @@ public class LazyJsonParser {
                         case 'u':  keyBuffer.append(parseU()); break;
                         case '"': case '\'': case '\\': case '/':
                             keyBuffer.append(c); break;
-                        default: throw new JsonParseException("Illegal escape.");
+                        default: throw new JsonParseException(JsonParseException.ILLEGAL_ESCAPE);
                     }
                     break;
                 default:
-                    if (c == '"') return keyBuffer.toString();
+                    if (c == '"') {
+                        return keyBuffer.toString();
+                    }
                     keyBuffer.append(c);
             }
         }
@@ -443,12 +466,22 @@ public class LazyJsonParser {
         int code = 0;
         for (int i = 0; i < 4; i++) {
             char c = nextToken();
-            if (c == 0) throw new JsonParseException("Illegal escape.");
+            if (c == 0) {
+                throw new JsonParseException(JsonParseException.ILLEGAL_ESCAPE);
+            }
             int digit;
-            if (c >= '0' && c <= '9') digit = c - '0';
-            else if (c >= 'A' && c <= 'F') digit = c - 'A' + 10;
-            else if (c >= 'a' && c <= 'f') digit = c - 'a' + 10;
-            else throw new JsonParseException("Illegal escape.");
+            if (c >= '0' && c <= '9') {
+                digit = c - '0';
+            }
+            else if (c >= 'A' && c <= 'F') {
+                digit = c - 'A' + 10;
+            }
+            else if (c >= 'a' && c <= 'f') {
+                digit = c - 'a' + 10;
+            }
+            else  {
+                throw new JsonParseException(JsonParseException.ILLEGAL_ESCAPE);
+            }
             code = (code << 4) | digit;
         }
         return Character.toChars(code);
@@ -461,12 +494,16 @@ public class LazyJsonParser {
         int primEnd = 0;
         char c = peekToken();
         while (c >= ' ' && isNotDelimiter(c)) {
-            if (primStart == -1) primStart = nextIdx - 1;
+            if (primStart == -1) {
+                primStart = nextIdx - 1;
+            }
             nextToken();
             primEnd = idx;
             c = peekToken();
         }
-        if (primStart == -1) throw new JsonParseException();
+        if (primStart == -1) {
+            throw new JsonParseException();
+        }
 
         int primLen = primEnd - primStart;
         if (primLen == 4) {
@@ -542,25 +579,35 @@ public class LazyJsonParser {
     // ---- number validation (structural only) ----
 
     private static void validateNumberStructure(char[] json, int start, int len, int end) throws JsonParseException {
-        if (hasDecimalIndicator(json, start, end)) return;
+        if (hasDecimalIndicator(json, start, end)) {
+            return;
+        }
 
         char initial = json[start];
         if (initial == '0' && len > 1) {
             char at1 = json[start + 1];
-            if (at1 >= '0' && at1 <= '9') throw new JsonParseException();
+            if (at1 >= '0' && at1 <= '9') {
+                throw new JsonParseException();
+            }
         }
         else if (initial == '-' && len > 2) {
             char at1 = json[start + 1];
             char at2 = json[start + 2];
-            if (at1 == '0' && at2 >= '0' && at2 <= '9') throw new JsonParseException();
+            if (at1 == '0' && at2 >= '0' && at2 <= '9') {
+                throw new JsonParseException();
+            }
         }
     }
 
     private static boolean hasDecimalIndicator(char[] json, int start, int end) {
-        if (end - start == 2 && json[start] == '-' && json[start + 1] == '0') return true;
+        if (end - start == 2 && json[start] == '-' && json[start + 1] == '0') {
+            return true;
+        }
         for (int i = start; i < end; i++) {
             char c = json[i];
-            if (c == '.' || c == 'e' || c == 'E') return true;
+            if (c == '.' || c == 'e' || c == 'E') {
+                return true;
+            }
         }
         return false;
     }
@@ -572,8 +619,12 @@ public class LazyJsonParser {
         boolean integersOnly = true; // default
         if (options != null) {
             for (JsonParser.Option opt : options) {
-                if (opt == JsonParser.Option.KEEP_NULLS) keepNulls = true;
-                else if (opt == JsonParser.Option.DECIMALS) integersOnly = false;
+                if (opt == JsonParser.Option.KEEP_NULLS) {
+                    keepNulls = true;
+                }
+                else if (opt == JsonParser.Option.DECIMALS) {
+                    integersOnly = false;
+                }
             }
         }
         return new boolean[]{keepNulls, integersOnly};
