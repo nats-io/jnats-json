@@ -294,7 +294,7 @@ public final class LazyJsonParsingTests {
     }
 
     @Test
-    public void testStreamInfoV3Parity() throws Exception {
+    public void testStreamInfoParity() throws Exception {
         String json = ResourceUtils.resourceAsString("stream_info.json");
         // stream_info.json has only integers — default mode works
         JsonValue eager = JsonParser.parse(json);
@@ -303,7 +303,7 @@ public final class LazyJsonParsingTests {
     }
 
     @Test
-    public void testConsumerInfoV3Parity() throws Exception {
+    public void testConsumerInfoParity() throws Exception {
         String json = ResourceUtils.resourceAsString("consumer_info.json");
         JsonValue eager = JsonParser.parse(json);
         LazyJsonValue deep = LazyJsonParser.parse(json);

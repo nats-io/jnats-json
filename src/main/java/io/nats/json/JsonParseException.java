@@ -27,6 +27,11 @@ public class JsonParseException extends IOException {
     public static final String INVALID_VALUE = "Invalid value.";
 
     /**
+     * The text for an illegal escape sequence in a JSON string
+     */
+    public static final String ILLEGAL_ESCAPE = "Illegal escape.";
+
+    /**
      * Constructs a {@code JsonParseException} with the message {@value #INVALID_VALUE}.
      */
     public JsonParseException() {

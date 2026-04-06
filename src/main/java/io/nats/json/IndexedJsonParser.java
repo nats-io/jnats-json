@@ -154,8 +154,12 @@ public class IndexedJsonParser {
         boolean decimals = false;
         if (options != null) {
             for (JsonParser.Option opt : options) {
-                if (opt == JsonParser.Option.KEEP_NULLS) kn = true;
-                else if (opt == JsonParser.Option.DECIMALS) decimals = true;
+                if (opt == JsonParser.Option.KEEP_NULLS) {
+                    kn = true;
+                }
+                else if (opt == JsonParser.Option.DECIMALS) {
+                    decimals = true;
+                }
             }
         }
         this.keepNulls = kn;
@@ -232,10 +236,12 @@ public class IndexedJsonParser {
                     if (esc == 'u') {
                         // validate 4 hex digits
                         for (int i = 0; i < 4; i++) {
-                            if (idx >= len) throw new JsonParseException("Illegal escape.");
+                            if (idx >= len) {
+                                throw new JsonParseException(JsonParseException.ILLEGAL_ESCAPE);
+                            }
                             char h = json[idx++];
                             if (!((h >= '0' && h <= '9') || (h >= 'A' && h <= 'F') || (h >= 'a' && h <= 'f'))) {
-                                throw new JsonParseException("Illegal escape.");
+                                throw new JsonParseException(JsonParseException.ILLEGAL_ESCAPE);
                             }
                         }
                     }
@@ -245,7 +251,7 @@ public class IndexedJsonParser {
                             case '"': case '\'': case '\\': case '/':
                                 break;
                             default:
-                                throw new JsonParseException("Illegal escape.");
+                                throw new JsonParseException(JsonParseException.ILLEGAL_ESCAPE);
                         }
                     }
                     break;
@@ -290,7 +296,7 @@ public class IndexedJsonParser {
                             keyBuffer.append(c);
                             break;
                         default:
-                            throw new JsonParseException("Illegal escape.");
+                            throw new JsonParseException(JsonParseException.ILLEGAL_ESCAPE);
                     }
                     break;
                 default:
@@ -306,12 +312,22 @@ public class IndexedJsonParser {
         int code = 0;
         for (int i = 0; i < 4; i++) {
             char c = nextToken();
-            if (c == 0) throw new JsonParseException("Illegal escape.");
+            if (c == 0) {
+                throw new JsonParseException(JsonParseException.ILLEGAL_ESCAPE);
+            }
             int digit;
-            if (c >= '0' && c <= '9') digit = c - '0';
-            else if (c >= 'A' && c <= 'F') digit = c - 'A' + 10;
-            else if (c >= 'a' && c <= 'f') digit = c - 'a' + 10;
-            else throw new JsonParseException("Illegal escape.");
+            if (c >= '0' && c <= '9') {
+                digit = c - '0';
+            }
+            else if (c >= 'A' && c <= 'F') {
+                digit = c - 'A' + 10;
+            }
+            else if (c >= 'a' && c <= 'f') {
+                digit = c - 'a' + 10;
+            }
+            else  {
+                throw new JsonParseException(JsonParseException.ILLEGAL_ESCAPE);
+            }
             code = (code << 4) | digit;
         }
         return Character.toChars(code);
@@ -441,7 +457,9 @@ public class IndexedJsonParser {
     private static void validateNumberStructure(char[] json, int start, int len, int end) throws JsonParseException {
         // The original JsonParser only rejects leading zeros for non-decimal numbers.
         // Skip this check if the number contains a decimal indicator (., e, E).
-        if (hasDecimalIndicator(json, start, end)) return;
+        if (hasDecimalIndicator(json, start, end)) {
+            return;
+        }
 
         char initial = json[start];
         // block items like 00 01 etc. Java number parsers treat these as Octal.

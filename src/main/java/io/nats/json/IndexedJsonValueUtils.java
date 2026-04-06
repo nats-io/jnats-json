@@ -44,7 +44,9 @@ public abstract class IndexedJsonValueUtils {
      */
     @Nullable
     public static IndexedJsonValue readValue(@Nullable IndexedJsonValue jv, @NonNull String key) {
-        if (jv == null || jv.getMap() == null) return null;
+        if (jv == null || jv.getMap() == null) {
+            return null;
+        }
         return jv.getMap().get(key);
     }
 
@@ -54,7 +56,9 @@ public abstract class IndexedJsonValueUtils {
     @Nullable
     public static <T> T read(@Nullable IndexedJsonValue jv, @NonNull String key, @Nullable T dflt,
                              @NonNull Function<IndexedJsonValue, T> valueSupplier) {
-        if (jv == null || jv.getMap() == null) return dflt;
+        if (jv == null || jv.getMap() == null) {
+            return dflt;
+        }
         IndexedJsonValue v = jv.getMap().get(key);
         return v == null ? dflt : valueSupplier.apply(v);
     }
@@ -66,7 +70,9 @@ public abstract class IndexedJsonValueUtils {
     public static <T> T read(@Nullable IndexedJsonValue jv, @NonNull String key, @Nullable T dflt,
                              @NonNull JsonValueType requiredType,
                              @NonNull Function<IndexedJsonValue, T> valueSupplier) {
-        if (jv == null || jv.getMap() == null) return dflt;
+        if (jv == null || jv.getMap() == null) {
+            return dflt;
+        }
         IndexedJsonValue v = jv.getMap().get(key);
         return v == null || v.type != requiredType ? dflt : valueSupplier.apply(v);
     }
@@ -304,7 +310,9 @@ public abstract class IndexedJsonValueUtils {
     @Nullable
     public static List<String> readStringListOrNull(@Nullable IndexedJsonValue jv, @NonNull String key, boolean ignoreBlank) {
         List<IndexedJsonValue> list = readArrayOrNull(jv, key);
-        if (list == null) return null;
+        if (list == null) {
+            return null;
+        }
         List<String> strings = convertToStringList(list, ignoreBlank);
         return strings.isEmpty() ? null : strings;
     }
@@ -345,7 +353,9 @@ public abstract class IndexedJsonValueUtils {
     @Nullable
     public static List<Integer> readIntegerListOrNull(@Nullable IndexedJsonValue jv, @NonNull String key) {
         List<IndexedJsonValue> source = readArrayOrNull(jv, key);
-        if (source == null) return null;
+        if (source == null) {
+            return null;
+        }
         List<Integer> list = convertToIntegerList(source);
         return list.isEmpty() ? null : list;
     }
@@ -373,7 +383,9 @@ public abstract class IndexedJsonValueUtils {
     @Nullable
     public static List<Long> readLongListOrNull(@Nullable IndexedJsonValue jv, @NonNull String key) {
         List<IndexedJsonValue> source = readArrayOrNull(jv, key);
-        if (source == null) return null;
+        if (source == null) {
+            return null;
+        }
         List<Long> list = convertToLongList(source);
         return list.isEmpty() ? null : list;
     }
@@ -423,14 +435,18 @@ public abstract class IndexedJsonValueUtils {
 
     @Nullable
     public static <T> List<T> listOfOrNull(@Nullable IndexedJsonValue jv, @NonNull Function<IndexedJsonValue, T> converter) {
-        if (jv == null || jv.getArray() == null) return null;
+        if (jv == null || jv.getArray() == null) {
+            return null;
+        }
         List<T> list = convertToList(jv.getArray(), converter);
         return list.isEmpty() ? null : list;
     }
 
     @NonNull
     public static <T> List<T> listOfOrEmpty(@Nullable IndexedJsonValue jv, @NonNull Function<IndexedJsonValue, T> converter) {
-        if (jv == null || jv.getArray() == null) return Collections.emptyList();
+        if (jv == null || jv.getArray() == null) {
+            return Collections.emptyList();
+        }
         return convertToList(jv.getArray(), converter);
     }
 
