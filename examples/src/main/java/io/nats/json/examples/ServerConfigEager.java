@@ -4,6 +4,7 @@ import io.nats.json.JsonParseException;
 import io.nats.json.JsonParser;
 import io.nats.json.JsonSerializable;
 import io.nats.json.JsonValue;
+import org.jspecify.annotations.NonNull;
 
 import java.time.Duration;
 import java.util.List;
@@ -46,7 +47,7 @@ public class ServerConfigEager implements JsonSerializable {
     }
 
     @Override
-    public String toJson() {
+    public @NonNull String toJson() {
         StringBuilder sb = beginJson();
         addField(sb, "name", name);
         addField(sb, "host", host);

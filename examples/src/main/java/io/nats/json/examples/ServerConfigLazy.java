@@ -4,6 +4,7 @@ import io.nats.json.JsonParseException;
 import io.nats.json.JsonSerializable;
 import io.nats.json.LazyJsonParser;
 import io.nats.json.LazyJsonValue;
+import org.jspecify.annotations.NonNull;
 
 import java.time.Duration;
 import java.util.List;
@@ -41,7 +42,7 @@ public class ServerConfigLazy implements JsonSerializable {
     public List<EndpointLazy> getEndpoints() { return EndpointLazy.optionalListOf(readValue(source, "endpoints")); }
 
     @Override
-    public String toJson() {
+    public @NonNull String toJson() {
         StringBuilder sb = beginJson();
         addField(sb, "name", getName());
         addField(sb, "host", getHost());

@@ -2,6 +2,7 @@ package io.nats.json.examples;
 
 import io.nats.json.IndexedJsonValue;
 import io.nats.json.JsonSerializable;
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,7 +24,7 @@ public class EndpointIndexed implements JsonSerializable {
     public int getWeight() { return readInteger(source, "weight", 0); }
 
     @Override
-    public String toJson() {
+    public @NonNull String toJson() {
         StringBuilder sb = beginJson();
         addField(sb, "name", getName());
         addField(sb, "url", getUrl());

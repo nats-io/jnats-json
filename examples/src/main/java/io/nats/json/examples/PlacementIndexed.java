@@ -2,6 +2,7 @@ package io.nats.json.examples;
 
 import io.nats.json.IndexedJsonValue;
 import io.nats.json.JsonSerializable;
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,7 +23,7 @@ public class PlacementIndexed implements JsonSerializable {
     public List<String> getTags() { return readStringListOrEmpty(source, "tags"); }
 
     @Override
-    public String toJson() {
+    public @NonNull String toJson() {
         StringBuilder sb = beginJson();
         addField(sb, "cluster", getCluster());
         addStrings(sb, "tags", getTags());
