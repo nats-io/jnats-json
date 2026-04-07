@@ -4,6 +4,7 @@ import io.nats.json.IndexedJsonParser;
 import io.nats.json.IndexedJsonValue;
 import io.nats.json.JsonParseException;
 import io.nats.json.JsonSerializable;
+import org.jspecify.annotations.NonNull;
 
 import java.time.Duration;
 import java.util.List;
@@ -40,7 +41,7 @@ public class ServerConfigIndexed implements JsonSerializable {
     public List<EndpointIndexed> getEndpoints() { return EndpointIndexed.optionalListOf(readValue(source, "endpoints")); }
 
     @Override
-    public String toJson() {
+    public @NonNull String toJson() {
         StringBuilder sb = beginJson();
         addField(sb, "name", getName());
         addField(sb, "host", getHost());

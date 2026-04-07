@@ -318,7 +318,7 @@ public class LazyJsonParser {
             return LazyJsonValue.EMPTY_MAP;
         }
         return new LazyJsonValue(JsonValueType.MAP, json, contentStart, contentEnd,
-            integersOnly, keepNulls, true);
+            false, integersOnly, keepNulls, false);
     }
 
     private LazyJsonValue skipArrayValue() throws JsonParseException {
@@ -333,7 +333,7 @@ public class LazyJsonParser {
             return LazyJsonValue.EMPTY_ARRAY;
         }
         return new LazyJsonValue(JsonValueType.ARRAY, json, contentStart, contentEnd,
-            integersOnly, keepNulls, true);
+            false, integersOnly, keepNulls, false);
     }
 
     /**
@@ -423,7 +423,7 @@ public class LazyJsonParser {
                     next = 0;
                     nextIdx = -1;
                     return new LazyJsonValue(JsonValueType.STRING, json, stringStart, stringEnd,
-                        hasEscapes, integersOnly);
+                        hasEscapes, integersOnly, false, true);
             }
         }
     }
@@ -523,7 +523,7 @@ public class LazyJsonParser {
             validateNumberStructure(json, primStart, primLen, primEnd);
             JsonValueType numType = integersOnly ? JsonValueType.INTEGER
                 : (hasDecimalIndicator(json, primStart, primEnd) ? JsonValueType.BIG_DECIMAL : JsonValueType.INTEGER);
-            return new LazyJsonValue(numType, json, primStart, primEnd, false, integersOnly);
+            return new LazyJsonValue(numType, json, primStart, primEnd, false, integersOnly, false, true);
         }
         throw new JsonParseException();
     }

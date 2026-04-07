@@ -2,6 +2,7 @@ package io.nats.json.examples;
 
 import io.nats.json.JsonSerializable;
 import io.nats.json.JsonValue;
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,7 +24,7 @@ public class EndpointEager implements JsonSerializable {
     }
 
     @Override
-    public String toJson() {
+    public @NonNull String toJson() {
         StringBuilder sb = beginJson();
         addField(sb, "name", name);
         addField(sb, "url", url);
