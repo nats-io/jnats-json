@@ -1,16 +1,19 @@
 name: Claude Code Review
 
+# GITHUB_TOKEN needs contents:read and actions:read — required by
+# claude-code-action for restoring trusted config files from the base branch.
+# All other GitHub API access uses the App token.
 permissions:
   contents: read
-  pull-requests: write
-  issues: write
-  id-token: write
+  actions: read
 
 on:
   issue_comment:
     types: [created]
   pull_request_review_comment:
     types: [created]
+  pull_request_target:
+    types: [opened, reopened]
 
 jobs:
   claude:
