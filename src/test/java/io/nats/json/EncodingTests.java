@@ -17,7 +17,6 @@ package io.nats.json;
 import io.ResourceUtils;
 import org.junit.jupiter.api.Test;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -60,20 +59,53 @@ public final class EncodingTests {
             _testJsonEncodeDecode(uu, "b4\b\f\n\r\t" + u + "after", uu);
         }
 
-        assertEquals("", Encoding.jsonEncode(null));
-        assertEquals("", Encoding.jsonEncode(new StringBuilder(), null).toString());
+        assertEquals("", Encoding.jsonEncode((String)null));
+        assertEquals("", Encoding.jsonEncode(new StringBuilder(), (String)null).toString());
+        assertEquals("", Encoding.jsonEncode(new char[0]));
+        assertEquals("", Encoding.jsonEncode(new StringBuilder(), new char[0]).toString());
     }
 
     private void _testJsonEncodeDecode(String encodedInput, String targetDecode, String targetEncode) {
         String decoded = jsonDecode(encodedInput);
         assertEquals(targetDecode, decoded);
-        String encoded = jsonEncode(new StringBuilder(), decoded).toString();
+        verifyEncode(encodedInput, targetEncode, jsonEncode(decoded));
+        verifyEncode(encodedInput, targetEncode, jsonEncode(new StringBuilder(), decoded).toString());
+        verifyEncode(encodedInput, targetEncode, jsonEncode(decoded.toCharArray()));
+        verifyEncode(encodedInput, targetEncode, jsonEncode(new StringBuilder(), decoded.toCharArray()).toString());
+    }
+
+    private static void verifyEncode(String encodedInput, String targetEncode, String encoded) {
         if (targetEncode == null) {
             assertEquals(encodedInput, encoded);
         }
         else {
             assertEquals(targetEncode, encoded);
         }
+    }
+
+    @Test
+    public void testJsonEncodeCharSequenceRange() {
+        // encode a middle portion that contains special chars
+        String full = "hello\tworld\n!";
+        // encoding chars 5-11: "\tworld\n"
+        String rangeResult = jsonEncode(new StringBuilder(), full, 5, 12).toString();
+        assertEquals("\\tworld\\n", rangeResult);
+
+        // start at 0, end before the full length
+        rangeResult = jsonEncode(new StringBuilder(), full, 0, 5).toString();
+        assertEquals("hello", rangeResult);
+
+        // single char range with special char
+        rangeResult = jsonEncode(new StringBuilder(), full, 5, 6).toString();
+        assertEquals("\\t", rangeResult);
+
+        // empty range (start == end)
+        rangeResult = jsonEncode(new StringBuilder(), full, 3, 3).toString();
+        assertEquals("", rangeResult);
+
+        // full range should match encoding the whole string
+        String fullResult = jsonEncode(new StringBuilder(), full, 0, full.length()).toString();
+        assertEquals(jsonEncode(full), fullResult);
     }
 
     @Test
@@ -126,7 +158,7 @@ public final class EncodingTests {
     }
 
     @Test
-    public void testBase64UrlEncoding() throws UnsupportedEncodingException {
+    public void testBase64UrlEncoding() {
         String text = "blahblah";
         byte[] btxt = text.getBytes();
         String surl = "https://nats.io/";
