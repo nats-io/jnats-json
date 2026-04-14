@@ -17,7 +17,6 @@ package io.nats.json;
 import io.ResourceUtils;
 import org.junit.jupiter.api.Test;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -60,14 +59,22 @@ public final class EncodingTests {
             _testJsonEncodeDecode(uu, "b4\b\f\n\r\t" + u + "after", uu);
         }
 
-        assertEquals("", Encoding.jsonEncode(null));
-        assertEquals("", Encoding.jsonEncode(new StringBuilder(), null).toString());
+        assertEquals("", Encoding.jsonEncode((String)null));
+        assertEquals("", Encoding.jsonEncode(new StringBuilder(), (String)null).toString());
+        assertEquals("", Encoding.jsonEncode(new char[0]));
+        assertEquals("", Encoding.jsonEncode(new StringBuilder(), new char[0]).toString());
     }
 
     private void _testJsonEncodeDecode(String encodedInput, String targetDecode, String targetEncode) {
         String decoded = jsonDecode(encodedInput);
         assertEquals(targetDecode, decoded);
-        String encoded = jsonEncode(new StringBuilder(), decoded).toString();
+        verifyEncode(encodedInput, targetEncode, jsonEncode(decoded));
+        verifyEncode(encodedInput, targetEncode, jsonEncode(new StringBuilder(), decoded).toString());
+        verifyEncode(encodedInput, targetEncode, jsonEncode(decoded.toCharArray()));
+        verifyEncode(encodedInput, targetEncode, jsonEncode(new StringBuilder(), decoded.toCharArray()).toString());
+    }
+
+    private static void verifyEncode(String encodedInput, String targetEncode, String encoded) {
         if (targetEncode == null) {
             assertEquals(encodedInput, encoded);
         }
@@ -126,7 +133,7 @@ public final class EncodingTests {
     }
 
     @Test
-    public void testBase64UrlEncoding() throws UnsupportedEncodingException {
+    public void testBase64UrlEncoding() {
         String text = "blahblah";
         byte[] btxt = text.getBytes();
         String surl = "https://nats.io/";
