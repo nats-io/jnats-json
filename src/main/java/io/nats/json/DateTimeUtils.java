@@ -138,6 +138,7 @@ public abstract class DateTimeUtils {
      * @param timestampNanos String timestamp
      * @param zoneId ZoneId
      * @return a Zoned Date time.
+     * @throws NumberFormatException if the {@code String} does not contain a parsable {@code long}.
      */
     public static ZonedDateTime parseDateTimeNanos(String timestampNanos, ZoneId zoneId) {
         long ts = Long.parseLong(timestampNanos);
