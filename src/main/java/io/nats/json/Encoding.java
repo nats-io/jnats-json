@@ -346,12 +346,12 @@ public abstract class Encoding {
 
         @Override
         public CharSequence subSequence(int start, int end) {
-            return ""; // don't care, we know this isn't called
+            return new String(chars, start, end - start);
         }
 
         @Override
         public String toString() {
-            return ""; // also never called
+            return new String(chars);
         }
     }
 

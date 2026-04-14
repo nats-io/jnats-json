@@ -84,6 +84,31 @@ public final class EncodingTests {
     }
 
     @Test
+    public void testJsonEncodeCharSequenceRange() {
+        // encode a middle portion that contains special chars
+        String full = "hello\tworld\n!";
+        // encoding chars 5-11: "\tworld\n"
+        String rangeResult = jsonEncode(new StringBuilder(), full, 5, 12).toString();
+        assertEquals("\\tworld\\n", rangeResult);
+
+        // start at 0, end before the full length
+        rangeResult = jsonEncode(new StringBuilder(), full, 0, 5).toString();
+        assertEquals("hello", rangeResult);
+
+        // single char range with special char
+        rangeResult = jsonEncode(new StringBuilder(), full, 5, 6).toString();
+        assertEquals("\\t", rangeResult);
+
+        // empty range (start == end)
+        rangeResult = jsonEncode(new StringBuilder(), full, 3, 3).toString();
+        assertEquals("", rangeResult);
+
+        // full range should match encoding the whole string
+        String fullResult = jsonEncode(new StringBuilder(), full, 0, full.length()).toString();
+        assertEquals(jsonEncode(full), fullResult);
+    }
+
+    @Test
     public void testBase64BasicEncoding() {
         String text = "blahblah";
         byte[] btxt = text.getBytes();
