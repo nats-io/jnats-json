@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Abstract base class for JSON values that reference the original source
@@ -50,10 +51,13 @@ public abstract class AbstractIndexedJsonValue<SELF extends AbstractIndexedJsonV
     final boolean hasEscapes;
     final boolean integersOnly;
 
-    // Cached results (computed lazily, at most once)
-    private String cachedString;
-    private Number cachedNumber;
-    private JsonValueType cachedNumberType;
+    // Cached results (computed lazily, at most once).
+    // volatile so that lazy initialization in ensureNumber()/extractString() is safely
+    // visible to other threads — equals/hashCode are routinely called by hash-based
+    // collections without external synchronization.
+    private volatile String cachedString;
+    private volatile Number cachedNumber;
+    private volatile JsonValueType cachedNumberType;
 
     // ---- constructor ----
 
@@ -272,6 +276,100 @@ public abstract class AbstractIndexedJsonValue<SELF extends AbstractIndexedJsonV
             default:
                 return JsonValue.NULL;
         }
+    }
+
+    // ---- equality (value-based) ----
+
+    /**
+     * Value-based equality. Two {@code AbstractIndexedJsonValue} instances are equal
+     * when they have the same {@link JsonValueType} and the same materialized value.
+     * <p>
+     * Comparison is symmetric across the concrete subclasses ({@link LazyJsonValue},
+     * {@link IndexedJsonValue}): a lazy and an indexed value with the same content are
+     * considered equal.
+     * <p>
+     * Calling this method on a value with deferred children (an unresolved
+     * {@link LazyJsonValue} MAP or ARRAY) will trigger that resolution.
+     */
+    @Override
+    public boolean equals(@Nullable Object o) {
+        if (this == o) return true;
+        if (o instanceof JsonValue) {
+            // Cross-type symmetry: materialize self to JsonValue and let JsonValue.equals
+            // do the comparison. Recursion terminates because the result is a JsonValue
+            // and JsonValue.equals(JsonValue) takes the normal path.
+            return toJsonValue().equals(o);
+        }
+        if (!(o instanceof AbstractIndexedJsonValue)) return false;
+        AbstractIndexedJsonValue<?> that = (AbstractIndexedJsonValue<?>) o;
+
+        // Normalize numeric types: parsers use INTEGER as a placeholder for any
+        // integer-looking value until materialized. Use the cached (materialized) type
+        // so equality doesn't depend on the parser's placeholder convention.
+        JsonValueType myType = type;
+        JsonValueType otherType = that.type;
+        if (isNumericType(myType) || isNumericType(otherType)) {
+            ensureNumber();
+            that.ensureNumber();
+            if (cachedNumberType != null) myType = cachedNumberType;
+            if (that.cachedNumberType != null) otherType = that.cachedNumberType;
+        }
+        if (myType != otherType) return false;
+
+        switch (myType) {
+            case STRING:      return Objects.equals(getString(), that.getString());
+            case BOOL:        return Objects.equals(getBoolean(), that.getBoolean());
+            case INTEGER:
+            case LONG:
+            case DOUBLE:
+            case FLOAT:
+            case BIG_DECIMAL:
+            case BIG_INTEGER: return Objects.equals(getNumber(), that.getNumber());
+            case MAP:         return Objects.equals(getMap(), that.getMap());
+            case ARRAY:       return Objects.equals(getArray(), that.getArray());
+            case NULL:        return true;
+            default:          return false;
+        }
+    }
+
+    private static boolean isNumericType(JsonValueType t) {
+        return t == JsonValueType.INTEGER
+            || t == JsonValueType.LONG
+            || t == JsonValueType.DOUBLE
+            || t == JsonValueType.FLOAT
+            || t == JsonValueType.BIG_DECIMAL
+            || t == JsonValueType.BIG_INTEGER;
+    }
+
+    @Override
+    public int hashCode() {
+        int hc;
+        // For numeric types the outer `type` is a placeholder set by the parser before
+        // materialization (e.g. INTEGER for any integer-looking value; only after parsing
+        // do we know whether it's actually INTEGER / LONG / BIG_INTEGER). Use the
+        // materialized numeric type so equal values across {JsonValue, IndexedJsonValue,
+        // LazyJsonValue} produce equal hashCodes.
+        JsonValueType hcType = type;
+        switch (type) {
+            case STRING:      hc = Objects.hashCode(getString()); break;
+            case BOOL:        hc = Objects.hashCode(getBoolean()); break;
+            case INTEGER:
+            case LONG:
+            case DOUBLE:
+            case FLOAT:
+            case BIG_DECIMAL:
+            case BIG_INTEGER:
+                ensureNumber();
+                hc = Objects.hashCode(cachedNumber);
+                if (cachedNumberType != null) {
+                    hcType = cachedNumberType;
+                }
+                break;
+            case MAP:         hc = Objects.hashCode(getMap()); break;
+            case ARRAY:       hc = Objects.hashCode(getArray()); break;
+            default:          hc = 0;
+        }
+        return 31 * hc + hcType.hashCode();
     }
 
     // ---- internal: number to JsonValue ----

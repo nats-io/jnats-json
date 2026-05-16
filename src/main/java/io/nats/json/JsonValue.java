@@ -541,7 +541,13 @@ public class JsonValue implements JsonSerializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o == null) return false;
+        if (o instanceof AbstractIndexedJsonValue) {
+            // Cross-type symmetry: materialize the indexed/lazy side to JsonValue and
+            // compare. Recursion terminates because the result is always a JsonValue.
+            return this.equals(((AbstractIndexedJsonValue<?>) o).toJsonValue());
+        }
+        if (getClass() != o.getClass()) return false;
 
         JsonValue jsonValue = (JsonValue) o;
 
