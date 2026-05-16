@@ -16,11 +16,8 @@ package io.nats.json;
 
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,6 +37,7 @@ public final class JsonValueEqualityTests {
         return JsonParser.parseUnchecked(json);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static JsonValue jv(String json, JsonParser.Option opt) {
         return JsonParser.parseUnchecked(json, opt);
     }
@@ -48,6 +46,7 @@ public final class JsonValueEqualityTests {
         return LazyJsonParser.parseUnchecked(json);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static LazyJsonValue lj(String json, JsonParser.Option opt) {
         return LazyJsonParser.parseUnchecked(json, opt);
     }
@@ -56,6 +55,7 @@ public final class JsonValueEqualityTests {
         return IndexedJsonParser.parseUnchecked(json);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static IndexedJsonValue ij(String json, JsonParser.Option opt) {
         return IndexedJsonParser.parseUnchecked(json, opt);
     }
@@ -64,19 +64,14 @@ public final class JsonValueEqualityTests {
      * Assert that the three given values (one of each representation) are all equal
      * to each other (in both directions) and share the same hashCode.
      */
+    @SuppressWarnings("AssertBetweenInconvertibleTypes")
     private static void assertAllEqual(JsonValue a, LazyJsonValue b, IndexedJsonValue c) {
         // 6 directed equality checks
-        //noinspection AssertBetweenInconvertibleTypes
         assertEquals(a, b, "JsonValue.equals(LazyJsonValue) failed");
-        //noinspection AssertBetweenInconvertibleTypes
         assertEquals(b, a, "LazyJsonValue.equals(JsonValue) failed");
-        //noinspection AssertBetweenInconvertibleTypes
         assertEquals(a, c, "JsonValue.equals(IndexedJsonValue) failed");
-        //noinspection AssertBetweenInconvertibleTypes
         assertEquals(c, a, "IndexedJsonValue.equals(JsonValue) failed");
-        //noinspection AssertBetweenInconvertibleTypes
         assertEquals(b, c, "LazyJsonValue.equals(IndexedJsonValue) failed");
-        //noinspection AssertBetweenInconvertibleTypes
         assertEquals(c, b, "IndexedJsonValue.equals(LazyJsonValue) failed");
 
         // hashCode parity across all three
@@ -89,6 +84,7 @@ public final class JsonValueEqualityTests {
      * Assert that no value in triple (a,b,c) equals any value in triple (x,y,z).
      * 9 pairwise inequality checks.
      */
+    @SuppressWarnings("AssertBetweenInconvertibleTypes")
     private static void assertNonePairwiseEqual(JsonValue a, LazyJsonValue b, IndexedJsonValue c,
                                                 JsonValue x, LazyJsonValue y, IndexedJsonValue z) {
         assertNotEquals(a, x); assertNotEquals(a, y); assertNotEquals(a, z);
@@ -100,23 +96,23 @@ public final class JsonValueEqualityTests {
 
     @Test
     public void testString() {
-        assertAllEqual(new JsonValue("hello"), lj("\"hello\""), ij("\"hello\""));
+        assertAllEqual(jv("\"hello\""), lj("\"hello\""), ij("\"hello\""));
     }
 
     @Test
     public void testStringInequality() {
         assertNonePairwiseEqual(
-            new JsonValue("hello"), lj("\"hello\""), ij("\"hello\""),
-            new JsonValue("world"), lj("\"world\""), ij("\"world\""));
+            jv("\"hello\""), lj("\"hello\""), ij("\"hello\""),
+            jv("\"world\""), lj("\"world\""), ij("\"world\""));
     }
 
     @Test
     public void testStringEscapesAreNormalized() {
-        // "AB" via direct, "AB" via escapes — same logical string
-        JsonValue a = new JsonValue("AB");
-        LazyJsonValue b = lj("\"\\u0041\\u0042\"");
-        IndexedJsonValue c = ij("\"\\u0041\\u0042\"");
-        assertAllEqual(a, b, c);
+        // "AB" via direct vs via escapes — same logical string
+        assertAllEqual(
+            new JsonValue("AB"),
+            lj("\"\\u0041\\u0042\""),
+            ij("\"\\u0041\\u0042\""));
     }
 
     // ---- BOOL / NULL -----------------------------------------------------
@@ -147,43 +143,113 @@ public final class JsonValueEqualityTests {
 
     @Test
     public void testInteger() {
-        assertAllEqual(new JsonValue(42), lj("42"), ij("42"));
+        assertAllEqual(jv("42"), lj("42"), ij("42"));
     }
 
     @Test
     public void testIntegerInequality() {
         assertNonePairwiseEqual(
-            new JsonValue(42), lj("42"), ij("42"),
-            new JsonValue(43), lj("43"), ij("43"));
+            jv("42"), lj("42"), ij("42"),
+            jv("43"), lj("43"), ij("43"));
     }
 
     @Test
     public void testLong() {
-        long big = 3_000_000_000L;
-        assertAllEqual(new JsonValue(big), lj("3000000000"), ij("3000000000"));
+        assertAllEqual(jv("3000000000"), lj("3000000000"), ij("3000000000"));
+    }
+
+    @Test
+    public void testDouble_negativeZero() {
+        // "-0" with DECIMALS is the one parser path that yields DOUBLE (-0.0).
+        assertAllEqual(
+            jv("-0", JsonParser.Option.DECIMALS),
+            lj("-0", JsonParser.Option.DECIMALS),
+            ij("-0", JsonParser.Option.DECIMALS));
+    }
+
+    @Test
+    public void testDouble_selfEqualityViaJsonValue() {
+        // 3.14 via the JsonValue(double) constructor produces a DOUBLE, but no parser
+        // path produces DOUBLE for "3.14" (it becomes BIG_DECIMAL under DECIMALS). So
+        // we test reflexivity and JsonValue-to-JsonValue equality for the DOUBLE type.
+        JsonValue a = new JsonValue(3.14);
+        JsonValue b = new JsonValue(3.14);
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+    }
+
+    @SuppressWarnings({"MisorderedAssertEqualsArguments", "AssertBetweenInconvertibleTypes"})
+    @Test
+    public void testDouble_typeMismatchWithBigDecimal() {
+        // new JsonValue(3.14) is DOUBLE; parsed "3.14" with DECIMALS is BIG_DECIMAL.
+        // Different JsonValueType → not equal (even though the numeric value is the same).
+        assertNotEquals(new JsonValue(3.14), lj("3.14", JsonParser.Option.DECIMALS));
+        assertNotEquals(new JsonValue(3.14), ij("3.14", JsonParser.Option.DECIMALS));
+        assertNotEquals(lj("3.14", JsonParser.Option.DECIMALS), new JsonValue(3.14));
+        assertNotEquals(ij("3.14", JsonParser.Option.DECIMALS), new JsonValue(3.14));
+    }
+
+    @Test
+    public void testDouble_NaN() {
+        // Double.NaN != Double.NaN by IEEE 754, but Double.equals(NaN, NaN) is true.
+        // The implementations use .equals() so NaN-valued JsonValues are equal to each other.
+        JsonValue a = new JsonValue(Double.NaN);
+        JsonValue b = new JsonValue(Double.NaN);
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+    }
+
+    @Test
+    public void testDouble_negativeZeroVsPositiveZero() {
+        // -0.0 and 0.0 are equal by IEEE 754 (==), but Double.equals(-0.0, 0.0) is false.
+        // The code uses .equals() so they are intentionally NOT considered equal.
+        assertNotEquals(new JsonValue(-0.0), new JsonValue(0.0));
+        assertNotEquals(new JsonValue(0.0), new JsonValue(-0.0));
+    }
+
+    @Test
+    public void testFloat_selfEquality() {
+        // FLOAT is never produced by parsers; test JsonValue ↔ JsonValue only.
+        JsonValue a = new JsonValue(3.14f);
+        JsonValue b = new JsonValue(3.14f);
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+    }
+
+    @Test
+    public void testFloat_NaN() {
+        JsonValue a = new JsonValue(Float.NaN);
+        JsonValue b = new JsonValue(Float.NaN);
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+    }
+
+    @Test
+    public void testFloat_DoubleVsFloatDifferentTypes() {
+        // Same numeric value, different JsonValueType → not equal.
+        assertNotEquals(new JsonValue(3.14f), new JsonValue((double) 3.14f));
     }
 
     @Test
     public void testBigDecimal() {
-        BigDecimal bd = new BigDecimal("3.14");
         assertAllEqual(
-            new JsonValue(bd),
+            jv("3.14", JsonParser.Option.DECIMALS),
             lj("3.14", JsonParser.Option.DECIMALS),
             ij("3.14", JsonParser.Option.DECIMALS));
     }
 
     @Test
     public void testBigInteger() {
-        BigInteger huge = new BigInteger("99999999999999999999999999");
-        assertAllEqual(new JsonValue(huge), lj(huge.toString()), ij(huge.toString()));
+        String huge = "99999999999999999999999999";
+        assertAllEqual(jv(huge), lj(huge), ij(huge));
     }
 
     @Test
     public void testNumberTypeMismatch() {
         // 42 (INTEGER) vs 42.0 (BIG_DECIMAL under DECIMALS) are different types — not equal.
         assertNonePairwiseEqual(
-            new JsonValue(42), lj("42"), ij("42"),
-            new JsonValue(new BigDecimal("42.0")),
+            jv("42"), lj("42"), ij("42"),
+            jv("42.0", JsonParser.Option.DECIMALS),
             lj("42.0", JsonParser.Option.DECIMALS),
             ij("42.0", JsonParser.Option.DECIMALS));
     }
@@ -192,22 +258,19 @@ public final class JsonValueEqualityTests {
 
     @Test
     public void testArray() {
-        List<JsonValue> arr = Arrays.asList(new JsonValue(1), new JsonValue(2), new JsonValue(3));
-        assertAllEqual(new JsonValue(arr), lj("[1,2,3]"), ij("[1,2,3]"));
+        assertAllEqual(jv("[1,2,3]"), lj("[1,2,3]"), ij("[1,2,3]"));
     }
 
     @Test
     public void testArrayOrderMatters() {
-        List<JsonValue> arr123 = Arrays.asList(new JsonValue(1), new JsonValue(2), new JsonValue(3));
-        List<JsonValue> arr321 = Arrays.asList(new JsonValue(3), new JsonValue(2), new JsonValue(1));
         assertNonePairwiseEqual(
-            new JsonValue(arr123), lj("[1,2,3]"), ij("[1,2,3]"),
-            new JsonValue(arr321), lj("[3,2,1]"), ij("[3,2,1]"));
+            jv("[1,2,3]"), lj("[1,2,3]"), ij("[1,2,3]"),
+            jv("[3,2,1]"), lj("[3,2,1]"), ij("[3,2,1]"));
     }
 
     @Test
     public void testEmptyArray() {
-        assertAllEqual(JsonValue.EMPTY_ARRAY, lj("[]"), ij("[]"));
+        assertAllEqual(jv("[]"), lj("[]"), ij("[]"));
     }
 
     // ---- MAP -------------------------------------------------------------
@@ -304,6 +367,7 @@ public final class JsonValueEqualityTests {
 
     // ---- IDENTITY / NULL / OTHER OBJECT ----------------------------------
 
+    @SuppressWarnings("EqualsWithItself")
     @Test
     public void testReflexive() {
         JsonValue a = new JsonValue("hello");
@@ -314,6 +378,7 @@ public final class JsonValueEqualityTests {
         assertEquals(c, c);
     }
 
+    @SuppressWarnings("MisorderedAssertEqualsArguments")
     @Test
     public void testNullParameter() {
         assertNotEquals(new JsonValue("x"), null);
@@ -321,6 +386,7 @@ public final class JsonValueEqualityTests {
         assertNotEquals(ij("\"x\""), null);
     }
 
+    @SuppressWarnings({"MisorderedAssertEqualsArguments", "AssertBetweenInconvertibleTypes"})
     @Test
     public void testForeignObject() {
         assertNotEquals(new JsonValue("x"), "x");

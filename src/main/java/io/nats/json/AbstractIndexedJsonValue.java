@@ -51,10 +51,13 @@ public abstract class AbstractIndexedJsonValue<SELF extends AbstractIndexedJsonV
     final boolean hasEscapes;
     final boolean integersOnly;
 
-    // Cached results (computed lazily, at most once)
-    private String cachedString;
-    private Number cachedNumber;
-    private JsonValueType cachedNumberType;
+    // Cached results (computed lazily, at most once).
+    // volatile so that lazy initialization in ensureNumber()/extractString() is safely
+    // visible to other threads — equals/hashCode are routinely called by hash-based
+    // collections without external synchronization.
+    private volatile String cachedString;
+    private volatile Number cachedNumber;
+    private volatile JsonValueType cachedNumberType;
 
     // ---- constructor ----
 
@@ -299,9 +302,21 @@ public abstract class AbstractIndexedJsonValue<SELF extends AbstractIndexedJsonV
         }
         if (!(o instanceof AbstractIndexedJsonValue)) return false;
         AbstractIndexedJsonValue<?> that = (AbstractIndexedJsonValue<?>) o;
-        if (type != that.type) return false;
 
-        switch (type) {
+        // Normalize numeric types: parsers use INTEGER as a placeholder for any
+        // integer-looking value until materialized. Use the cached (materialized) type
+        // so equality doesn't depend on the parser's placeholder convention.
+        JsonValueType myType = type;
+        JsonValueType otherType = that.type;
+        if (isNumericType(myType) || isNumericType(otherType)) {
+            ensureNumber();
+            that.ensureNumber();
+            if (cachedNumberType != null) myType = cachedNumberType;
+            if (that.cachedNumberType != null) otherType = that.cachedNumberType;
+        }
+        if (myType != otherType) return false;
+
+        switch (myType) {
             case STRING:      return Objects.equals(getString(), that.getString());
             case BOOL:        return Objects.equals(getBoolean(), that.getBoolean());
             case INTEGER:
@@ -315,6 +330,15 @@ public abstract class AbstractIndexedJsonValue<SELF extends AbstractIndexedJsonV
             case NULL:        return true;
             default:          return false;
         }
+    }
+
+    private static boolean isNumericType(JsonValueType t) {
+        return t == JsonValueType.INTEGER
+            || t == JsonValueType.LONG
+            || t == JsonValueType.DOUBLE
+            || t == JsonValueType.FLOAT
+            || t == JsonValueType.BIG_DECIMAL
+            || t == JsonValueType.BIG_INTEGER;
     }
 
     @Override
