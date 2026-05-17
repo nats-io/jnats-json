@@ -37,12 +37,12 @@ public abstract class DateTimeUtils {
     /**
      * The ZoneId for GMT
      */
-    public static final ZoneId ZONE_ID_GMT = ZoneId.of("GMT");
+    public static final ZoneId ZONE_ID_UTC = ZoneId.of("UTC");
 
     /**
      * The ZoneDateTime uses as a default, can be used instead of null
      */
-    public static final ZonedDateTime DEFAULT_TIME = ZonedDateTime.of(1, 1, 1, 0, 0, 0, 0, ZONE_ID_GMT);
+    public static final ZonedDateTime DEFAULT_TIME = ZonedDateTime.of(1, 1, 1, 0, 0, 0, 0, ZONE_ID_UTC);
 
     /**
      * The formatter to crate RFC 3339 strings from dates.
@@ -55,7 +55,7 @@ public abstract class DateTimeUtils {
      * @return the output
      */
     public static ZonedDateTime toGmt(ZonedDateTime zonedDateTime) {
-        return zonedDateTime.withZoneSameInstant(ZONE_ID_GMT);
+        return zonedDateTime.withZoneSameInstant(ZONE_ID_UTC);
     }
 
     /**
@@ -63,7 +63,7 @@ public abstract class DateTimeUtils {
      * @return the current date-time using the system clock in GMT
      */
     public static ZonedDateTime gmtNow() {
-        return ZonedDateTime.now().withZoneSameInstant(ZONE_ID_GMT);
+        return ZonedDateTime.now().withZoneSameInstant(ZONE_ID_UTC);
     }
 
     /**
@@ -75,7 +75,7 @@ public abstract class DateTimeUtils {
     public static boolean equals(@Nullable ZonedDateTime zdt1, @Nullable ZonedDateTime zdt2) {
         if (zdt1 == zdt2) return true;
         if (zdt1 == null || zdt2 == null) return false;
-        return zdt1.withZoneSameInstant(ZONE_ID_GMT).equals(zdt2.withZoneSameInstant(ZONE_ID_GMT));
+        return zdt1.withZoneSameInstant(ZONE_ID_UTC).equals(zdt2.withZoneSameInstant(ZONE_ID_UTC));
     }
 
     /**
@@ -153,7 +153,7 @@ public abstract class DateTimeUtils {
      * @return a ZonedDateTime.
      */
     public static ZonedDateTime fromNow(long millis) {
-        return ZonedDateTime.ofInstant(Instant.now().plusMillis(millis), ZONE_ID_GMT);
+        return ZonedDateTime.ofInstant(Instant.now().plusMillis(millis), ZONE_ID_UTC);
     }
 
     /**
@@ -162,6 +162,6 @@ public abstract class DateTimeUtils {
      * @return a ZonedDateTime.
      */
     public static ZonedDateTime fromNow(Duration dur) {
-        return ZonedDateTime.ofInstant(Instant.now().plusMillis(dur.toMillis()), ZONE_ID_GMT);
+        return ZonedDateTime.ofInstant(Instant.now().plusMillis(dur.toMillis()), ZONE_ID_UTC);
     }
 }

@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.nats.json;
+package io.nats.benchmark;
 
 import io.ResourceUtils;
+import io.nats.json.*;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 

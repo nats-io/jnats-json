@@ -35,7 +35,7 @@ public final class DateTimeUtilsTests {
         ZonedDateTime zdt2 = DateTimeUtils.parseDateTime("2021-01-20T23:41:08.000000Z");
         assertEquals(zdt1, zdt2);
 
-        zdt1 = ZonedDateTime.of(2012, 1, 12, 6, 30, 1, 500, DateTimeUtils.ZONE_ID_GMT);
+        zdt1 = ZonedDateTime.of(2012, 1, 12, 6, 30, 1, 500, DateTimeUtils.ZONE_ID_UTC);
         assertEquals(zdt1.toEpochSecond(), DateTimeUtils.parseDateTime("2012-01-12T06:30:01.000000500Z").toEpochSecond());
     }
 
@@ -49,7 +49,7 @@ public final class DateTimeUtilsTests {
     public void testToRfc3339() {
         Instant i = Instant.ofEpochSecond(1611186068);
         ZonedDateTime zdt1 = ZonedDateTime.ofInstant(i, ZoneId.systemDefault());
-        ZonedDateTime zdt2 = ZonedDateTime.ofInstant(i, DateTimeUtils.ZONE_ID_GMT);
+        ZonedDateTime zdt2 = ZonedDateTime.ofInstant(i, DateTimeUtils.ZONE_ID_UTC);
         assertEquals(zdt1.toEpochSecond(), zdt2.toEpochSecond());
 
         String rfc1 = DateTimeUtils.toRfc3339(zdt1);
@@ -82,7 +82,7 @@ public final class DateTimeUtilsTests {
     public void testEquals() {
         Instant i = Instant.ofEpochSecond(System.currentTimeMillis());
         ZonedDateTime zdt1 = ZonedDateTime.ofInstant(i, ZoneId.of("America/New_York"));
-        ZonedDateTime zdt2 = ZonedDateTime.ofInstant(i, DateTimeUtils.ZONE_ID_GMT);
+        ZonedDateTime zdt2 = ZonedDateTime.ofInstant(i, DateTimeUtils.ZONE_ID_UTC);
         assertTrue(DateTimeUtils.equals(zdt1, zdt1));
         assertTrue(DateTimeUtils.equals(zdt1, zdt2));
         assertFalse(DateTimeUtils.equals(zdt1, null));
@@ -90,7 +90,7 @@ public final class DateTimeUtilsTests {
 
         i = Instant.ofEpochSecond(System.currentTimeMillis() - (1000 * 60 * 60 * 24));
         ZonedDateTime zdt3 = ZonedDateTime.ofInstant(i, ZoneId.of("America/New_York"));
-        ZonedDateTime zdt4 = ZonedDateTime.ofInstant(i, DateTimeUtils.ZONE_ID_GMT);
+        ZonedDateTime zdt4 = ZonedDateTime.ofInstant(i, DateTimeUtils.ZONE_ID_UTC);
         assertFalse(DateTimeUtils.equals(zdt3, zdt1));
         assertFalse(DateTimeUtils.equals(zdt4, zdt1));
     }
