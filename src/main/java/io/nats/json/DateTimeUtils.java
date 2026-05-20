@@ -35,7 +35,7 @@ public abstract class DateTimeUtils {
     private static final long NANO_FACTOR = 1_000_000_000;
 
     /**
-     * The ZoneId for GMT
+     * The ZoneId for UTC
      */
     public static final ZoneId ZONE_ID_UTC = ZoneId.of("UTC");
 
@@ -50,24 +50,24 @@ public abstract class DateTimeUtils {
     public static final DateTimeFormatter RFC3339_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.nnnnnnnnn'Z'");
 
     /**
-     * Convert a ZoneDateTime to a GMT version of the ZoneDateTime
+     * Convert a ZoneDateTime to a UTC version of the ZoneDateTime
      * @param zonedDateTime the input
      * @return the output
      */
-    public static ZonedDateTime toGmt(ZonedDateTime zonedDateTime) {
+    public static ZonedDateTime toUtc(ZonedDateTime zonedDateTime) {
         return zonedDateTime.withZoneSameInstant(ZONE_ID_UTC);
     }
 
     /**
-     * Get an instance of ZonedDateTime.now(), but for the GMT timezone
-     * @return the current date-time using the system clock in GMT
+     * Get an instance of ZonedDateTime.now(), but for the UTC timezone
+     * @return the current date-time using the system clock in UTC
      */
-    public static ZonedDateTime gmtNow() {
+    public static ZonedDateTime utcNow() {
         return ZonedDateTime.now().withZoneSameInstant(ZONE_ID_UTC);
     }
 
     /**
-     * Compare two ZonedDateTime after converting them to the GMT timezone
+     * Compare two ZonedDateTime after converting them to the UTC timezone
      * @param zdt1 the first ZonedDateTime
      * @param zdt2 the second ZonedDateTime
      * @return true if they are equal
@@ -84,7 +84,7 @@ public abstract class DateTimeUtils {
      * @return the formatted string
      */
     public static String toRfc3339(ZonedDateTime zonedDateTime) {
-        return RFC3339_FORMATTER.format(toGmt(zonedDateTime));
+        return RFC3339_FORMATTER.format(toUtc(zonedDateTime));
     }
 
     /**
@@ -104,7 +104,7 @@ public abstract class DateTimeUtils {
      */
     public static ZonedDateTime parseDateTime(String dateTime, ZonedDateTime dflt) {
         try {
-            return toGmt(ZonedDateTime.parse(dateTime));
+            return toUtc(ZonedDateTime.parse(dateTime));
         }
         catch (DateTimeParseException s) {
             return dflt;
@@ -117,7 +117,7 @@ public abstract class DateTimeUtils {
      * @return a ZonedDateTime.
      */
     public static ZonedDateTime parseDateTimeThrowParseError(String dateTime) {
-        return toGmt(ZonedDateTime.parse(dateTime));
+        return toUtc(ZonedDateTime.parse(dateTime));
     }
 
     /**

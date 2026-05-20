@@ -61,9 +61,9 @@ public final class DateTimeUtilsTests {
     }
 
     @Test
-    public void testGmtNow() {
+    public void testUtcNow() {
         long now = Instant.now().toEpochMilli();
-        long gnow = DateTimeUtils.gmtNow().toInstant().toEpochMilli();
+        long gnow = DateTimeUtils.utcNow().toInstant().toEpochMilli();
         assertTrue(gnow - now < 50);
     }
 
