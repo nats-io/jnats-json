@@ -761,6 +761,35 @@ public final class IndexedJsonParsingTests {
     }
 
     @Test
+    public void testGetUnsignedLongAndBigInteger() throws Exception {
+        // zero
+        assertEquals(Long.valueOf(0L), IndexedJsonParser.parse("0").getUnsignedLong());
+        assertEquals(BigInteger.ZERO, IndexedJsonParser.parse("0").getUnsignedBigInteger());
+
+        // max signed long (2^63 - 1)
+        IndexedJsonValue maxSigned = IndexedJsonParser.parse("9223372036854775807");
+        assertEquals(Long.valueOf(Long.MAX_VALUE), maxSigned.getUnsignedLong());
+        assertEquals(BigInteger.valueOf(Long.MAX_VALUE), maxSigned.getUnsignedBigInteger());
+        assertEquals(Long.valueOf(Long.MAX_VALUE), maxSigned.getLong());
+
+        // first top-half value (2^63) — getLong() drops it, the unsigned helpers recover it
+        IndexedJsonValue firstTopHalf = IndexedJsonParser.parse("9223372036854775808");
+        assertEquals(Long.valueOf(Long.MIN_VALUE), firstTopHalf.getUnsignedLong());
+        assertEquals(new BigInteger("9223372036854775808"), firstTopHalf.getUnsignedBigInteger());
+        assertNull(firstTopHalf.getLong()); // regression guard: unchanged behavior
+
+        // uint64 max (2^64 - 1)
+        IndexedJsonValue uMax = IndexedJsonParser.parse("18446744073709551615");
+        assertEquals(Long.valueOf(-1L), uMax.getUnsignedLong());
+        assertEquals(new BigInteger("18446744073709551615"), uMax.getUnsignedBigInteger());
+        assertNull(uMax.getLong());
+
+        // non-integral
+        assertNull(IndexedJsonParser.parse("3.14").getUnsignedLong());
+        assertNull(IndexedJsonParser.parse("3.14").getUnsignedBigInteger());
+    }
+
+    @Test
     public void testGetNumber() throws Exception {
         IndexedJsonValue v = IndexedJsonParser.parse("42");
         assertNotNull(v.getNumber());

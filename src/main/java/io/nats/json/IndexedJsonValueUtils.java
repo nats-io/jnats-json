@@ -17,6 +17,7 @@ package io.nats.json;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
+import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -129,6 +130,44 @@ public abstract class IndexedJsonValueUtils {
     public static long readLong(@Nullable IndexedJsonValue jv, @NonNull String key, long dflt) {
         Long l = readLong(jv, key);
         return l == null ? dflt : l;
+    }
+
+    // ---- Unsigned long / BigInteger ----
+
+    /**
+     * Read a key's value as an unsigned 64-bit long bit pattern. Accepts INTEGER, LONG and
+     * BIG_INTEGER types; values above {@code Long.MAX_VALUE} are returned as their low 64 bits
+     * (a negative {@code long}). See {@link IndexedJsonValue#getUnsignedLong()}.
+     */
+    @Nullable
+    public static Long readUnsignedLong(@Nullable IndexedJsonValue jv, @NonNull String key) {
+        return read(jv, key, null, IndexedJsonValue::getUnsignedLong);
+    }
+
+    /**
+     * Read a key's value as an unsigned 64-bit long bit pattern with a default.
+     */
+    public static long readUnsignedLong(@Nullable IndexedJsonValue jv, @NonNull String key, long dflt) {
+        Long l = readUnsignedLong(jv, key);
+        return l == null ? dflt : l;
+    }
+
+    /**
+     * Read a key's value as a non-negative unsigned 64-bit number. Accepts INTEGER, LONG and
+     * BIG_INTEGER types. See {@link IndexedJsonValue#getUnsignedBigInteger()}.
+     */
+    @Nullable
+    public static BigInteger readUnsignedBigInteger(@Nullable IndexedJsonValue jv, @NonNull String key) {
+        return read(jv, key, null, IndexedJsonValue::getUnsignedBigInteger);
+    }
+
+    /**
+     * Read a key's value as a non-negative unsigned 64-bit number with a default.
+     */
+    @Nullable
+    public static BigInteger readUnsignedBigInteger(@Nullable IndexedJsonValue jv, @NonNull String key, BigInteger dflt) {
+        BigInteger b = readUnsignedBigInteger(jv, key);
+        return b == null ? dflt : b;
     }
 
     // ---- Boolean ----
