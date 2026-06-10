@@ -17,6 +17,7 @@ package io.nats.json;
 import io.ResourceUtils;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.ZonedDateTime;
@@ -192,6 +193,43 @@ public final class JsonValueUtilsTests {
         assertEquals(dflt, readLong(TEST_JV, MAP, dflt));
         assertEquals(dflt, readLong(TEST_JV, ARRAY, dflt));
         assertEquals(dflt, readLong(TEST_JV, NOT_A_KEY, dflt));
+    }
+
+    @Test
+    public void testReadUnsigned() {
+        JsonValue jv = JsonParser.parseUnchecked(
+            "{\"zero\":0," +
+            "\"maxSigned\":9223372036854775807," +
+            "\"firstTopHalf\":9223372036854775808," +
+            "\"uMax\":18446744073709551615," +
+            "\"frac\":3.14}", JsonParser.Option.DECIMALS);
+
+        // readUnsignedLong — full 0..2^64-1 range, top half comes back as the negative bit pattern
+        assertEquals(Long.valueOf(0L), readUnsignedLong(jv, "zero"));
+        assertEquals(Long.valueOf(Long.MAX_VALUE), readUnsignedLong(jv, "maxSigned"));
+        assertEquals(Long.valueOf(Long.MIN_VALUE), readUnsignedLong(jv, "firstTopHalf"));
+        assertEquals(Long.valueOf(-1L), readUnsignedLong(jv, "uMax"));
+        assertNull(readUnsignedLong(jv, "frac"));
+        assertNull(readUnsignedLong(jv, NOT_A_KEY));
+
+        long dflt = 99;
+        assertEquals(0L, readUnsignedLong(jv, "zero", dflt));
+        assertEquals(Long.MIN_VALUE, readUnsignedLong(jv, "firstTopHalf", dflt));
+        assertEquals(dflt, readUnsignedLong(jv, "frac", dflt));
+        assertEquals(dflt, readUnsignedLong(jv, NOT_A_KEY, dflt));
+
+        // readUnsignedBigInteger — non-negative magnitude
+        assertEquals(BigInteger.ZERO, readUnsignedBigInteger(jv, "zero"));
+        assertEquals(BigInteger.valueOf(Long.MAX_VALUE), readUnsignedBigInteger(jv, "maxSigned"));
+        assertEquals(new BigInteger("9223372036854775808"), readUnsignedBigInteger(jv, "firstTopHalf"));
+        assertEquals(new BigInteger("18446744073709551615"), readUnsignedBigInteger(jv, "uMax"));
+        assertNull(readUnsignedBigInteger(jv, "frac"));
+        assertNull(readUnsignedBigInteger(jv, NOT_A_KEY));
+
+        BigInteger bdflt = BigInteger.valueOf(99);
+        assertEquals(new BigInteger("18446744073709551615"), readUnsignedBigInteger(jv, "uMax", bdflt));
+        assertEquals(bdflt, readUnsignedBigInteger(jv, "frac", bdflt));
+        assertEquals(bdflt, readUnsignedBigInteger(jv, NOT_A_KEY, bdflt));
     }
 
     @Test

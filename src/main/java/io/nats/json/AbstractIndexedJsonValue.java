@@ -224,6 +224,49 @@ public abstract class AbstractIndexedJsonValue<SELF extends AbstractIndexedJsonV
         return cachedNumber;
     }
 
+    /**
+     * Get the value as an unsigned 64-bit number held in a {@code long}, across the full
+     * {@code 0 .. 2^64-1} range. Unlike {@link #getLong()}, this also handles values above
+     * {@code Long.MAX_VALUE} (stored as {@code BigInteger}): it returns their low 64 bits, i.e. the
+     * two's-complement bit pattern, which reads as a <i>negative</i> {@code long}. Interpret the result
+     * with {@link Long#toUnsignedString(long)} / {@link Long#compareUnsigned(long, long)}, or use
+     * {@link #getUnsignedBigInteger()} for a non-negative value.
+     * @return the unsigned long bit pattern, or {@code null} if the value is absent or not an integral number
+     */
+    @Nullable
+    public Long getUnsignedLong() {
+        ensureNumber();
+        if (cachedNumberType == JsonValueType.INTEGER
+            || cachedNumberType == JsonValueType.LONG
+            || cachedNumberType == JsonValueType.BIG_INTEGER) {
+            return cachedNumber.longValue();
+        }
+        return null; // DOUBLE/FLOAT/BIG_DECIMAL/non-numeric -> not an integral value
+    }
+
+    /**
+     * Get the value as a non-negative unsigned 64-bit number. For values up to {@code Long.MAX_VALUE}
+     * this equals {@link #getLong()}; for the top half of the range it is the true unsigned magnitude
+     * ({@code Long.MAX_VALUE < v <= 2^64-1}). Heavier than {@link #getUnsignedLong()} (allocates).
+     * @return the value as a non-negative BigInteger, or {@code null} if absent or not an integral number
+     */
+    @Nullable
+    public BigInteger getUnsignedBigInteger() {
+        ensureNumber();
+        if (cachedNumberType == JsonValueType.BIG_INTEGER) {
+            BigInteger bi = (BigInteger) cachedNumber;
+            // Parser top-half values are already 0..2^64-1, so the common path returns bi as-is.
+            // A negative BIG_INTEGER (e.g. a large negative JSON integer, or a programmatically
+            // constructed value) is reinterpreted via its unsigned low-64-bit view so the
+            // non-negative contract holds and matches getUnsignedLong().
+            return bi.signum() >= 0 ? bi : new BigInteger(Long.toUnsignedString(bi.longValue()));
+        }
+        if (cachedNumberType == JsonValueType.INTEGER || cachedNumberType == JsonValueType.LONG) {
+            return new BigInteger(Long.toUnsignedString(cachedNumber.longValue())); // unsigned view
+        }
+        return null;
+    }
+
     // ---- JsonSerializable ----
 
     @Override

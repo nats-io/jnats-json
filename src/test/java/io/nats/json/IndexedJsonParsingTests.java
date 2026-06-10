@@ -761,6 +761,51 @@ public final class IndexedJsonParsingTests {
     }
 
     @Test
+    public void testGetUnsignedLongAndBigInteger() throws Exception {
+        // zero
+        assertEquals(Long.valueOf(0L), IndexedJsonParser.parse("0").getUnsignedLong());
+        assertEquals(BigInteger.ZERO, IndexedJsonParser.parse("0").getUnsignedBigInteger());
+
+        // max signed long (2^63 - 1)
+        IndexedJsonValue maxSigned = IndexedJsonParser.parse("9223372036854775807");
+        assertEquals(Long.valueOf(Long.MAX_VALUE), maxSigned.getUnsignedLong());
+        assertEquals(BigInteger.valueOf(Long.MAX_VALUE), maxSigned.getUnsignedBigInteger());
+        assertEquals(Long.valueOf(Long.MAX_VALUE), maxSigned.getLong());
+
+        // first top-half value (2^63) — getLong() drops it, the unsigned helpers recover it
+        IndexedJsonValue firstTopHalf = IndexedJsonParser.parse("9223372036854775808");
+        assertEquals(Long.valueOf(Long.MIN_VALUE), firstTopHalf.getUnsignedLong());
+        assertEquals(new BigInteger("9223372036854775808"), firstTopHalf.getUnsignedBigInteger());
+        assertNull(firstTopHalf.getLong()); // regression guard: unchanged behavior
+
+        // uint64 max (2^64 - 1)
+        IndexedJsonValue uMax = IndexedJsonParser.parse("18446744073709551615");
+        assertEquals(Long.valueOf(-1L), uMax.getUnsignedLong());
+        assertEquals(new BigInteger("18446744073709551615"), uMax.getUnsignedBigInteger());
+        assertNull(uMax.getLong());
+
+        // non-integral
+        assertNull(IndexedJsonParser.parse("3.14").getUnsignedLong());
+        assertNull(IndexedJsonParser.parse("3.14").getUnsignedBigInteger());
+
+        // negative signed source (-1): not a uint64, but the two's-complement reinterpretation is
+        // intentional — getUnsignedLong() is the bit pattern, getUnsignedBigInteger() its unsigned view
+        IndexedJsonValue negOne = IndexedJsonParser.parse("-1");
+        assertEquals(Long.valueOf(-1L), negOne.getUnsignedLong());
+        assertEquals(new BigInteger("18446744073709551615"), negOne.getUnsignedBigInteger());
+        assertEquals(Long.valueOf(-1L), negOne.getLong());
+
+        // a large negative integer parses to a negative BIG_INTEGER; getUnsignedBigInteger() must
+        // still honor its non-negative contract (low-64-bit unsigned view, here 0 for -2^64)
+        IndexedJsonValue negBig = IndexedJsonParser.parse("-18446744073709551616");
+        assertEquals(Long.valueOf(0L), negBig.getUnsignedLong());
+        BigInteger negBigUnsigned = negBig.getUnsignedBigInteger();
+        assertNotNull(negBigUnsigned);
+        assertTrue(negBigUnsigned.signum() >= 0);
+        assertEquals(BigInteger.ZERO, negBigUnsigned);
+    }
+
+    @Test
     public void testGetNumber() throws Exception {
         IndexedJsonValue v = IndexedJsonParser.parse("42");
         assertNotNull(v.getNumber());

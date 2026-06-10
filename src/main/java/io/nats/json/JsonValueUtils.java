@@ -17,6 +17,7 @@ package io.nats.json;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
+import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -157,6 +158,56 @@ public abstract class JsonValueUtils {
     public static long readLong(@Nullable JsonValue jv, @NonNull String key, long dflt) {
         Long l = readLong(jv, key);
         return l == null ? dflt : l;
+    }
+
+    /**
+     * Read a key's value as an unsigned 64-bit long bit pattern. Accepts INTEGER, LONG and
+     * BIG_INTEGER types; values above {@code Long.MAX_VALUE} are returned as their low 64 bits
+     * (a negative {@code long}). See {@link JsonValue#getUnsignedLong()}.
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
+     * @param key the key to look up
+     * @return the unsigned long bit pattern or null
+     */
+    @Nullable
+    public static Long readUnsignedLong(@Nullable JsonValue jv, @NonNull String key) {
+        return read(jv, key, null, JsonValueUtils::getUnsignedLong);
+    }
+
+    /**
+     * Read a key's value as an unsigned 64-bit long bit pattern with a default.
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
+     * @param key the key to look up
+     * @param dflt the default value
+     * @return the unsigned long bit pattern or the default
+     */
+    public static long readUnsignedLong(@Nullable JsonValue jv, @NonNull String key, long dflt) {
+        Long l = readUnsignedLong(jv, key);
+        return l == null ? dflt : l;
+    }
+
+    /**
+     * Read a key's value as a non-negative unsigned 64-bit number. Accepts INTEGER, LONG and
+     * BIG_INTEGER types. See {@link JsonValue#getUnsignedBigInteger()}.
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
+     * @param key the key to look up
+     * @return the non-negative BigInteger or null
+     */
+    @Nullable
+    public static BigInteger readUnsignedBigInteger(@Nullable JsonValue jv, @NonNull String key) {
+        return read(jv, key, null, JsonValueUtils::getUnsignedBigInteger);
+    }
+
+    /**
+     * Read a key's value as a non-negative unsigned 64-bit number with a default.
+     * @param jv the jsonValue that is an object (type is {@link JsonValueType#MAP})
+     * @param key the key to look up
+     * @param dflt the default value
+     * @return the non-negative BigInteger or the default
+     */
+    @Nullable
+    public static BigInteger readUnsignedBigInteger(@Nullable JsonValue jv, @NonNull String key, @Nullable BigInteger dflt) {
+        BigInteger b = readUnsignedBigInteger(jv, key);
+        return b == null ? dflt : b;
     }
 
     /**
@@ -737,5 +788,25 @@ public abstract class JsonValueUtils {
      */
     public static long getLong(@NonNull JsonValue jv, long dflt) {
         return jv.l != null ? jv.l : (jv.i != null ? (long)jv.i : dflt);
+    }
+
+    /**
+     * Get the value as an unsigned 64-bit long bit pattern. See {@link JsonValue#getUnsignedLong()}.
+     * @param jv the jsonValue that represents an Integer, Long or BigInteger
+     * @return the unsigned long bit pattern, which may be null
+     */
+    @Nullable
+    public static Long getUnsignedLong(@NonNull JsonValue jv) {
+        return jv.getUnsignedLong();
+    }
+
+    /**
+     * Get the value as a non-negative unsigned 64-bit number. See {@link JsonValue#getUnsignedBigInteger()}.
+     * @param jv the jsonValue that represents an Integer, Long or BigInteger
+     * @return the non-negative BigInteger, which may be null
+     */
+    @Nullable
+    public static BigInteger getUnsignedBigInteger(@NonNull JsonValue jv) {
+        return jv.getUnsignedBigInteger();
     }
 }

@@ -492,6 +492,46 @@ public class JsonValue implements JsonSerializable {
         return this;
     }
 
+    /**
+     * Get the value as an unsigned 64-bit number held in a {@code long}, across the full
+     * {@code 0 .. 2^64-1} range. Unlike a plain long read, this also handles values above
+     * {@code Long.MAX_VALUE} (held as {@code BigInteger}): it returns their low 64 bits, i.e. the
+     * two's-complement bit pattern, which reads as a <i>negative</i> {@code long}. Interpret the result
+     * with {@link Long#toUnsignedString(long)} / {@link Long#compareUnsigned(long, long)}, or use
+     * {@link #getUnsignedBigInteger()} for a non-negative value.
+     * @return the unsigned long bit pattern, or {@code null} if this is not an integral number
+     */
+    @Nullable
+    public Long getUnsignedLong() {
+        if (type == JsonValueType.INTEGER
+            || type == JsonValueType.LONG
+            || type == JsonValueType.BIG_INTEGER) {
+            return number.longValue();
+        }
+        return null; // DOUBLE/FLOAT/BIG_DECIMAL/non-numeric -> not an integral value
+    }
+
+    /**
+     * Get the value as a non-negative unsigned 64-bit number. For values up to {@code Long.MAX_VALUE}
+     * this equals the signed long; for the top half of the range it is the true unsigned magnitude
+     * ({@code Long.MAX_VALUE < v <= 2^64-1}). Heavier than {@link #getUnsignedLong()} (allocates).
+     * @return the value as a non-negative BigInteger, or {@code null} if this is not an integral number
+     */
+    @Nullable
+    public BigInteger getUnsignedBigInteger() {
+        if (type == JsonValueType.BIG_INTEGER) {
+            // Parser top-half values are already 0..2^64-1, so the common path returns bi as-is.
+            // A negative BigInteger (only reachable via direct construction here) is reinterpreted
+            // via its unsigned low-64-bit view so the non-negative contract holds and matches
+            // getUnsignedLong().
+            return bi.signum() >= 0 ? bi : new BigInteger(Long.toUnsignedString(bi.longValue()));
+        }
+        if (type == JsonValueType.INTEGER || type == JsonValueType.LONG) {
+            return new BigInteger(Long.toUnsignedString(number.longValue())); // unsigned view
+        }
+        return null;
+    }
+
     @SuppressWarnings("DataFlowIssue") // we check the type and know the backing item is not null
     @Override
     @NonNull
