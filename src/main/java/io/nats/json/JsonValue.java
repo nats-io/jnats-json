@@ -520,7 +520,11 @@ public class JsonValue implements JsonSerializable {
     @Nullable
     public BigInteger getUnsignedBigInteger() {
         if (type == JsonValueType.BIG_INTEGER) {
-            return bi; // already 0..2^64-1 for a parsed top-half value
+            // Parser top-half values are already 0..2^64-1, so the common path returns bi as-is.
+            // A negative BigInteger (only reachable via direct construction here) is reinterpreted
+            // via its unsigned low-64-bit view so the non-negative contract holds and matches
+            // getUnsignedLong().
+            return bi.signum() >= 0 ? bi : new BigInteger(Long.toUnsignedString(bi.longValue()));
         }
         if (type == JsonValueType.INTEGER || type == JsonValueType.LONG) {
             return new BigInteger(Long.toUnsignedString(number.longValue())); // unsigned view

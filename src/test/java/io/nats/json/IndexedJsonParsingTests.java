@@ -787,6 +787,22 @@ public final class IndexedJsonParsingTests {
         // non-integral
         assertNull(IndexedJsonParser.parse("3.14").getUnsignedLong());
         assertNull(IndexedJsonParser.parse("3.14").getUnsignedBigInteger());
+
+        // negative signed source (-1): not a uint64, but the two's-complement reinterpretation is
+        // intentional — getUnsignedLong() is the bit pattern, getUnsignedBigInteger() its unsigned view
+        IndexedJsonValue negOne = IndexedJsonParser.parse("-1");
+        assertEquals(Long.valueOf(-1L), negOne.getUnsignedLong());
+        assertEquals(new BigInteger("18446744073709551615"), negOne.getUnsignedBigInteger());
+        assertEquals(Long.valueOf(-1L), negOne.getLong());
+
+        // a large negative integer parses to a negative BIG_INTEGER; getUnsignedBigInteger() must
+        // still honor its non-negative contract (low-64-bit unsigned view, here 0 for -2^64)
+        IndexedJsonValue negBig = IndexedJsonParser.parse("-18446744073709551616");
+        assertEquals(Long.valueOf(0L), negBig.getUnsignedLong());
+        BigInteger negBigUnsigned = negBig.getUnsignedBigInteger();
+        assertNotNull(negBigUnsigned);
+        assertTrue(negBigUnsigned.signum() >= 0);
+        assertEquals(BigInteger.ZERO, negBigUnsigned);
     }
 
     @Test

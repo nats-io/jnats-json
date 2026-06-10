@@ -205,7 +205,7 @@ public abstract class JsonValueUtils {
      * @return the non-negative BigInteger or the default
      */
     @Nullable
-    public static BigInteger readUnsignedBigInteger(@Nullable JsonValue jv, @NonNull String key, BigInteger dflt) {
+    public static BigInteger readUnsignedBigInteger(@Nullable JsonValue jv, @NonNull String key, @Nullable BigInteger dflt) {
         BigInteger b = readUnsignedBigInteger(jv, key);
         return b == null ? dflt : b;
     }

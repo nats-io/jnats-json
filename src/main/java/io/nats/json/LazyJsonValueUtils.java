@@ -165,7 +165,7 @@ public abstract class LazyJsonValueUtils {
      * Read a key's value as a non-negative unsigned 64-bit number with a default.
      */
     @Nullable
-    public static BigInteger readUnsignedBigInteger(@Nullable LazyJsonValue jv, @NonNull String key, BigInteger dflt) {
+    public static BigInteger readUnsignedBigInteger(@Nullable LazyJsonValue jv, @NonNull String key, @Nullable BigInteger dflt) {
         BigInteger b = readUnsignedBigInteger(jv, key);
         return b == null ? dflt : b;
     }

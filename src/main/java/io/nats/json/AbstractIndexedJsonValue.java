@@ -254,7 +254,12 @@ public abstract class AbstractIndexedJsonValue<SELF extends AbstractIndexedJsonV
     public BigInteger getUnsignedBigInteger() {
         ensureNumber();
         if (cachedNumberType == JsonValueType.BIG_INTEGER) {
-            return (BigInteger) cachedNumber; // parser top-half, already 0..2^64-1
+            BigInteger bi = (BigInteger) cachedNumber;
+            // Parser top-half values are already 0..2^64-1, so the common path returns bi as-is.
+            // A negative BIG_INTEGER (e.g. a large negative JSON integer, or a programmatically
+            // constructed value) is reinterpreted via its unsigned low-64-bit view so the
+            // non-negative contract holds and matches getUnsignedLong().
+            return bi.signum() >= 0 ? bi : new BigInteger(Long.toUnsignedString(bi.longValue()));
         }
         if (cachedNumberType == JsonValueType.INTEGER || cachedNumberType == JsonValueType.LONG) {
             return new BigInteger(Long.toUnsignedString(cachedNumber.longValue())); // unsigned view

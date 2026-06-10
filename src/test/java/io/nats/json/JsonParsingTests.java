@@ -500,6 +500,21 @@ public final class JsonParsingTests {
         JsonValue frac = parseUnchecked("3.14", JsonParser.Option.DECIMALS);
         assertNull(frac.getUnsignedLong());
         assertNull(frac.getUnsignedBigInteger());
+
+        // negative signed source (-1): not a uint64, but the two's-complement reinterpretation is
+        // intentional — getUnsignedLong() is the bit pattern, getUnsignedBigInteger() its unsigned view
+        JsonValue negOne = parse("-1");
+        assertEquals(Long.valueOf(-1L), negOne.getUnsignedLong());
+        assertEquals(new BigInteger("18446744073709551615"), negOne.getUnsignedBigInteger());
+
+        // a programmatically constructed negative BigInteger must still honor the non-negative
+        // contract of getUnsignedBigInteger() (low-64-bit unsigned view)
+        JsonValue negBig = new JsonValue(BigInteger.valueOf(-5));
+        assertEquals(Long.valueOf(-5L), negBig.getUnsignedLong());
+        BigInteger negBigUnsigned = negBig.getUnsignedBigInteger();
+        assertNotNull(negBigUnsigned);
+        assertTrue(negBigUnsigned.signum() >= 0);
+        assertEquals(new BigInteger("18446744073709551611"), negBigUnsigned);
     }
 
     @Test
