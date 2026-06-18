@@ -135,6 +135,9 @@ public class LazyJsonParser {
      */
     @NonNull
     public static LazyJsonValue from(@NonNull JsonSerializable js) {
+        if (js instanceof LazyJsonValue) {
+            return (LazyJsonValue) js;
+        }
         return LazyJsonValue.from(js.toJsonValue());
     }
 

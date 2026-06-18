@@ -377,4 +377,23 @@ public final class LazyBuilderTests {
         assertEquals(JsonValue.class, arrFromBuilder.getClass());
         assertEquals(arrExpected, arrFromBuilder);
     }
+
+    // ---- a cross-type NULL singleton must still honor the put/add-nulls flag ----
+
+    @Test
+    public void testCrossTypeNullSingletonRespectsFlag() {
+        // IndexedJsonValue.NULL handed to a lazy builder must be treated as a null, not slip through
+        assertEquals("{}", LazyMapBuilder.instance().put("a", IndexedJsonValue.NULL).toJson());
+        assertEquals("{\"a\":null}", LazyMapBuilder.instance(true).put("a", IndexedJsonValue.NULL).toJson());
+        assertEquals("[]", LazyArrayBuilder.instance().add(IndexedJsonValue.NULL).toJson());
+        assertEquals("[null]", LazyArrayBuilder.instance(true).add(IndexedJsonValue.NULL).toJson());
+    }
+
+    // ---- from() short-circuits when the argument is already a LazyJsonValue ----
+
+    @Test
+    public void testFromSameTypeReturnsSameInstance() {
+        LazyJsonValue v = LazyMapBuilder.instance().put("a", 1).build();
+        assertSame(v, LazyJsonParser.from(v));
+    }
 }

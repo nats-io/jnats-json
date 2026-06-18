@@ -124,6 +124,9 @@ public class IndexedJsonParser {
      */
     @NonNull
     public static IndexedJsonValue from(@NonNull JsonSerializable js) {
+        if (js instanceof IndexedJsonValue) {
+            return (IndexedJsonValue) js;
+        }
         return IndexedJsonValue.from(js.toJsonValue());
     }
 

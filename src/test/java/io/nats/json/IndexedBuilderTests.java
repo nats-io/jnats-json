@@ -377,4 +377,23 @@ public final class IndexedBuilderTests {
         assertEquals(JsonValue.class, arrFromBuilder.getClass());
         assertEquals(arrExpected, arrFromBuilder);
     }
+
+    // ---- a cross-type NULL singleton must still honor the put/add-nulls flag ----
+
+    @Test
+    public void testCrossTypeNullSingletonRespectsFlag() {
+        // LazyJsonValue.NULL handed to an indexed builder must be treated as a null, not slip through
+        assertEquals("{}", IndexedMapBuilder.instance().put("a", LazyJsonValue.NULL).toJson());
+        assertEquals("{\"a\":null}", IndexedMapBuilder.instance(true).put("a", LazyJsonValue.NULL).toJson());
+        assertEquals("[]", IndexedArrayBuilder.instance().add(LazyJsonValue.NULL).toJson());
+        assertEquals("[null]", IndexedArrayBuilder.instance(true).add(LazyJsonValue.NULL).toJson());
+    }
+
+    // ---- from() short-circuits when the argument is already an IndexedJsonValue ----
+
+    @Test
+    public void testFromSameTypeReturnsSameInstance() {
+        IndexedJsonValue v = IndexedMapBuilder.instance().put("a", 1).build();
+        assertSame(v, IndexedJsonParser.from(v));
+    }
 }

@@ -83,7 +83,7 @@ public class IndexedArrayBuilder implements JsonSerializable {
      */
     @NonNull
     public IndexedArrayBuilder add(@Nullable Object value) {
-        if (value == null || value == JsonValue.NULL || value == IndexedJsonValue.NULL) {
+        if (value == null || value == JsonValue.NULL || value == IndexedJsonValue.NULL || value == LazyJsonValue.NULL) {
             if (addNulls) {
                 theArray.add(IndexedJsonValue.NULL);
             }

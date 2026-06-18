@@ -83,7 +83,7 @@ public class LazyMapBuilder implements JsonSerializable {
      */
     @NonNull
     public LazyMapBuilder put(@NonNull String key, @Nullable Object value) {
-        if (value == null || value == JsonValue.NULL || value == LazyJsonValue.NULL) {
+        if (value == null || value == JsonValue.NULL || value == LazyJsonValue.NULL || value == IndexedJsonValue.NULL) {
             if (putNulls) {
                 theMap.put(key, LazyJsonValue.NULL);
             }
