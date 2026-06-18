@@ -72,6 +72,41 @@ public abstract class AbstractIndexedJsonValue<SELF extends AbstractIndexedJsonV
         this.integersOnly = integersOnly;
     }
 
+    /**
+     * Constructor for a programmatically built leaf whose value is already
+     * materialized — there is no backing {@code char[]}. The relevant caches are
+     * pre-populated so the normal accessors ({@link #getString()},
+     * {@link #getNumber()}, etc.) return the supplied value without any parsing.
+     * <p>
+     * For a STRING leaf pass {@code cachedString}; for a numeric leaf pass
+     * {@code cachedNumber} together with the concrete {@code cachedNumberType}.
+     */
+    protected AbstractIndexedJsonValue(@NonNull JsonValueType type, @Nullable String cachedString,
+                                       @Nullable Number cachedNumber, @Nullable JsonValueType cachedNumberType) {
+        if (type == JsonValueType.STRING) {
+            if (cachedString == null) {
+                throw new IllegalArgumentException("A STRING value requires a non-null string.");
+            }
+        }
+        else if (isNumericType(type)) {
+            if (cachedNumber == null || cachedNumberType != type) {
+                throw new IllegalArgumentException("A " + type + " value requires a matching non-null number.");
+            }
+        }
+        else {
+            throw new IllegalArgumentException("This constructor only supports STRING and numeric leaf values.");
+        }
+        this.type = type;
+        this.json = null;
+        this.start = 0;
+        this.end = 0;
+        this.hasEscapes = false;
+        this.integersOnly = false;
+        this.cachedString = cachedString;
+        this.cachedNumber = cachedNumber;
+        this.cachedNumberType = cachedNumberType;
+    }
+
     // ---- abstract methods for subclass-specific behavior ----
 
     /**
@@ -299,7 +334,7 @@ public abstract class AbstractIndexedJsonValue<SELF extends AbstractIndexedJsonV
                 if (m == null || m.isEmpty()) {
                     return JsonValue.EMPTY_MAP;
                 }
-                java.util.HashMap<String, JsonValue> out = new java.util.HashMap<>();
+                java.util.LinkedHashMap<String, JsonValue> out = new java.util.LinkedHashMap<>();
                 for (Map.Entry<String, SELF> e : m.entrySet()) {
                     out.put(e.getKey(), e.getValue().toJsonValue());
                 }
@@ -370,9 +405,10 @@ public abstract class AbstractIndexedJsonValue<SELF extends AbstractIndexedJsonV
             case BIG_INTEGER: return Objects.equals(getNumber(), that.getNumber());
             case MAP:         return Objects.equals(getMap(), that.getMap());
             case ARRAY:       return Objects.equals(getArray(), that.getArray());
-            case NULL:        return true;
-            default:          return false;
         }
+
+        // the only other type left is NULL
+        return true;
     }
 
     private static boolean isNumericType(JsonValueType t) {

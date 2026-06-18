@@ -436,6 +436,10 @@ public class JsonValue implements JsonSerializable {
         }
     }
 
+    public @NonNull List<String> getMapOrder() {
+        return Collections.unmodifiableList(mapOrder);
+    }
+
     public void setMapOrder(String... keys) {
         if (type != JsonValueType.MAP) {
             throw new IllegalStateException("JsonValue does not represent a map.");
@@ -604,9 +608,9 @@ public class JsonValue implements JsonSerializable {
             case BIG_INTEGER: return bi.equals(jsonValue.bi);
             case MAP: return map.equals(jsonValue.map);
             case ARRAY: return array.equals(jsonValue.array);
-            case NULL: return true; // null has null value, type was already checked.
         }
-        return false;
+        // can only be NULL, NULL has null value, type was already checked.
+        return true;
     }
 
     @SuppressWarnings("DataFlowIssue") // by checking the type we know that the value is not null

@@ -26,6 +26,25 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public final class EncodingTests {
     @Test
+    public void testMinimalCharSequence() {
+        char[] chars = "hello".toCharArray();
+        Encoding.MinimalCharSequence mcs = new Encoding.MinimalCharSequence(chars);
+        assertArrayEquals(chars, mcs.chars);
+        assertEquals(5, mcs.length());
+        assertEquals('h', mcs.charAt(0));
+        assertEquals('o', mcs.charAt(4));
+        assertEquals("hello", mcs.toString());
+        assertEquals("ell", mcs.subSequence(1, 4).toString());
+        assertEquals("hello", mcs.subSequence(0, 5).toString());
+        assertEquals("", mcs.subSequence(2, 2).toString());
+
+        // empty backing array
+        Encoding.MinimalCharSequence empty = new Encoding.MinimalCharSequence(new char[0]);
+        assertEquals(0, empty.length());
+        assertEquals("", empty.toString());
+    }
+
+    @Test
     public void testJsonEncodeDecode() {
         _testJsonEncodeDecode("b4\\\\after", "b4\\after", null); // a single slash with a meaningless letter after it
         _testJsonEncodeDecode("b4\\\\tafter", "b4\\tafter", null); // a single slash with a char that can be part of an escape
@@ -72,6 +91,7 @@ public final class EncodingTests {
         verifyEncode(encodedInput, targetEncode, jsonEncode(new StringBuilder(), decoded).toString());
         verifyEncode(encodedInput, targetEncode, jsonEncode(decoded.toCharArray()));
         verifyEncode(encodedInput, targetEncode, jsonEncode(new StringBuilder(), decoded.toCharArray()).toString());
+        verifyEncode(encodedInput, targetEncode, jsonEncode(new StringBuilder(), new MinimalCharSequence(decoded.toCharArray())).toString());
     }
 
     private static void verifyEncode(String encodedInput, String targetEncode, String encoded) {

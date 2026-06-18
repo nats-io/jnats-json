@@ -17,9 +17,7 @@ package io.nats.json;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * A JSON value that references the original source char array and only
@@ -62,6 +60,18 @@ public class IndexedJsonValue extends AbstractIndexedJsonValue<IndexedJsonValue>
         this.array = null;
     }
 
+    IndexedJsonValue(@NonNull String cachedString) {
+        super(JsonValueType.STRING, cachedString, null, null);
+        this.map = null;
+        this.array = null;
+    }
+
+    IndexedJsonValue(@NonNull JsonValueType numberType, @NonNull Number cachedNumber) {
+        super(numberType, null, cachedNumber, numberType);
+        this.map = null;
+        this.array = null;
+    }
+
     IndexedJsonValue(@NonNull Map<String, IndexedJsonValue> map) {
         super(JsonValueType.MAP, null, 0, 0, false, false);
         this.map = map;
@@ -88,6 +98,72 @@ public class IndexedJsonValue extends AbstractIndexedJsonValue<IndexedJsonValue>
             this.map = null;
             this.array = null;
         }
+    }
+
+    // ---- construction from a materialized JsonValue ----
+
+    /**
+     * Build an {@code IndexedJsonValue} from a materialized {@link JsonValue}.
+     * This is the structural inverse of {@link #toJsonValue()} and copies no
+     * source characters. Map key order is preserved (following the source
+     * {@code mapOrder} when present).
+     * @param jv the source value
+     * @return an equivalent IndexedJsonValue
+     */
+    @NonNull
+    public static IndexedJsonValue from(@NonNull JsonValue jv) {
+        switch (jv.type) {
+            case STRING:
+                //noinspection DataFlowIssue -- type is STRING, so jv.string is not null
+                return new IndexedJsonValue(jv.string);
+            case BOOL:
+                return Boolean.TRUE.equals(jv.bool) ? TRUE : FALSE;
+            case INTEGER:
+            case LONG:
+            case DOUBLE:
+            case FLOAT:
+            case BIG_DECIMAL:
+            case BIG_INTEGER:
+                //noinspection DataFlowIssue -- type is numeric, so jv.number is not null
+                return new IndexedJsonValue(jv.type, jv.number);
+            case MAP:
+                return fromMap(jv);
+            case ARRAY:
+                return fromArray(jv);
+        }
+        return NULL;
+    }
+
+    private static IndexedJsonValue fromMap(@NonNull JsonValue jv) {
+        Map<String, JsonValue> src = jv.map;
+        if (src == null || src.isEmpty()) {
+            return EMPTY_MAP;
+        }
+        Map<String, IndexedJsonValue> out = new LinkedHashMap<>();
+        for (String key : jv.mapOrder) {
+            JsonValue child = src.get(key);
+            if (child != null) {
+                out.put(key, from(child));
+            }
+        }
+        for (Map.Entry<String, JsonValue> e : src.entrySet()) {
+            if (!out.containsKey(e.getKey())) {
+                out.put(e.getKey(), from(e.getValue()));
+            }
+        }
+        return new IndexedJsonValue(out);
+    }
+
+    private static IndexedJsonValue fromArray(@NonNull JsonValue jv) {
+        List<JsonValue> src = jv.array;
+        if (src == null || src.isEmpty()) {
+            return EMPTY_ARRAY;
+        }
+        List<IndexedJsonValue> out = new ArrayList<>(src.size());
+        for (JsonValue child : src) {
+            out.add(from(child));
+        }
+        return new IndexedJsonValue(out);
     }
 
     // ---- abstract method implementations ----
