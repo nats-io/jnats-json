@@ -113,6 +113,20 @@ public class IndexedJsonParser {
         catch (JsonParseException j) { throw new RuntimeException(j); }
     }
 
+    // ---- construction from materialized values (no parsing) ----
+
+    /**
+     * Build an {@link IndexedJsonValue} directly from any {@link JsonSerializable},
+     * without serializing and re-parsing. A {@link JsonValue} is itself a
+     * {@code JsonSerializable}, so it may be passed here as well.
+     * @param js the source serializable
+     * @return an equivalent IndexedJsonValue
+     */
+    @NonNull
+    public static IndexedJsonValue from(@NonNull JsonSerializable js) {
+        return IndexedJsonValue.from(js.toJsonValue());
+    }
+
     // ---- instance fields ----
 
     private final char @NonNull [] json;

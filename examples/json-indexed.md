@@ -98,6 +98,44 @@ public class MyClass implements JsonSerializable {
 }
 ```
 
+## Building an IndexedJsonValue directly
+
+You can create an `IndexedJsonValue` from key/values or an existing `JsonValue` /
+`JsonSerializable` without serializing to a string and re-parsing it.
+
+Use `IndexedMapBuilder` for raw key/values (the indexed twin of `MapBuilder`):
+
+```java
+IndexedJsonValue v = IndexedMapBuilder.instance()
+    .put("name", name)
+    .put("deliver_subject", deliverSubject)
+    .put("max_bytes", 1024L)
+    .put("nested", IndexedMapBuilder.instance().put("a", 1).build())
+    .put("tags", Arrays.asList("x", "y"))
+    .build();                 // -> IndexedJsonValue (use build() or the public jv field)
+
+String json = v.toJson();     // key order follows insertion order
+```
+
+For a top-level array, `IndexedArrayBuilder` is the twin of `ArrayBuilder`:
+
+```java
+IndexedJsonValue arr = IndexedArrayBuilder.instance()
+    .add("x")
+    .add(1)
+    .addItems(Arrays.asList("y", "z"))
+    .build();                 // -> IndexedJsonValue
+```
+
+Use `IndexedJsonParser.from(...)` to convert an existing value without the
+`toJson()` + re-parse round trip (a `JsonValue` is a `JsonSerializable`, so it works here too):
+
+```java
+// instead of: IndexedJsonParser.parseUnchecked(serializable.toJson())
+IndexedJsonValue v = IndexedJsonParser.from(serializable);   // any JsonSerializable
+IndexedJsonValue v2 = IndexedJsonParser.from(someJsonValue); // a JsonValue works too
+```
+
 ## Key Difference from Eager
 
 In the eager version, fields are read once in the constructor and stored as Java fields.

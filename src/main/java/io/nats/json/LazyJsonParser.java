@@ -124,6 +124,20 @@ public class LazyJsonParser {
         catch (JsonParseException j) { throw new RuntimeException(j); }
     }
 
+    // ---- construction from materialized values (no parsing) ----
+
+    /**
+     * Build a {@link LazyJsonValue} directly from any {@link JsonSerializable},
+     * without serializing and re-parsing. A {@link JsonValue} is itself a
+     * {@code JsonSerializable}, so it may be passed here as well.
+     * @param js the source serializable
+     * @return an equivalent LazyJsonValue
+     */
+    @NonNull
+    public static LazyJsonValue from(@NonNull JsonSerializable js) {
+        return LazyJsonValue.from(js.toJsonValue());
+    }
+
     // ---- package-private: used by LazyJsonValue for lazy resolution ----
 
     static Map<String, LazyJsonValue> shallowParseObject(

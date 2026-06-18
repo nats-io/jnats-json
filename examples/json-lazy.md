@@ -101,6 +101,44 @@ public class MyClass implements JsonSerializable {
 }
 ```
 
+## Building a LazyJsonValue directly
+
+You can create a `LazyJsonValue` from key/values or an existing `JsonValue` /
+`JsonSerializable` without serializing to a string and re-parsing it.
+
+Use `LazyMapBuilder` for raw key/values (the lazy twin of `MapBuilder`):
+
+```java
+LazyJsonValue v = LazyMapBuilder.instance()
+    .put("name", name)
+    .put("deliver_subject", deliverSubject)
+    .put("max_bytes", 1024L)
+    .put("nested", LazyMapBuilder.instance().put("a", 1).build())
+    .put("tags", Arrays.asList("x", "y"))
+    .build();                 // -> LazyJsonValue (use build() or the public jv field)
+
+String json = v.toJson();     // key order follows insertion order
+```
+
+For a top-level array, `LazyArrayBuilder` is the twin of `ArrayBuilder`:
+
+```java
+LazyJsonValue arr = LazyArrayBuilder.instance()
+    .add("x")
+    .add(1)
+    .addItems(Arrays.asList("y", "z"))
+    .build();                 // -> LazyJsonValue
+```
+
+Use `LazyJsonParser.from(...)` to convert an existing value without the
+`toJson()` + re-parse round trip (a `JsonValue` is a `JsonSerializable`, so it works here too):
+
+```java
+// instead of: LazyJsonParser.parseUnchecked(serializable.toJson())
+LazyJsonValue v = LazyJsonParser.from(serializable);   // any JsonSerializable
+LazyJsonValue v2 = LazyJsonParser.from(someJsonValue); // a JsonValue works too
+```
+
 ## Key Difference from Indexed
 
 The indexed parser builds the full HashMap/ArrayList tree during parse but defers leaf values.
