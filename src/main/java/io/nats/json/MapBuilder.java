@@ -111,6 +111,14 @@ public class MapBuilder implements JsonSerializable {
     }
 
     /**
+     * Whether this builder puts null values in the map (vs. dropping them).
+     * @return true if nulls are put
+     */
+    public boolean allowPutNulls() {
+        return putNulls;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

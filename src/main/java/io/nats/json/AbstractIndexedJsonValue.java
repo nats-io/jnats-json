@@ -405,9 +405,10 @@ public abstract class AbstractIndexedJsonValue<SELF extends AbstractIndexedJsonV
             case BIG_INTEGER: return Objects.equals(getNumber(), that.getNumber());
             case MAP:         return Objects.equals(getMap(), that.getMap());
             case ARRAY:       return Objects.equals(getArray(), that.getArray());
-            case NULL:        return true;
-            default:          return false;
         }
+
+        // the only other type left is NULL
+        return true;
     }
 
     private static boolean isNumericType(JsonValueType t) {

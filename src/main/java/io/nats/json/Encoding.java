@@ -327,7 +327,7 @@ public abstract class Encoding {
         return sb;
     }
 
-    private static class MinimalCharSequence implements CharSequence {
+    static class MinimalCharSequence implements CharSequence {
         final char[] chars;
 
         public MinimalCharSequence(char[] chars) {

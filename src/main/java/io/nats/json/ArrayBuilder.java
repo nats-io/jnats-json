@@ -108,6 +108,14 @@ public class ArrayBuilder implements JsonSerializable {
     }
 
     /**
+     * Whether this builder adds null values to the array (vs. dropping them).
+     * @return true if nulls are added
+     */
+    public boolean allowAddNulls() {
+        return addNulls;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

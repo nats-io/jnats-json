@@ -114,6 +114,14 @@ public class IndexedArrayBuilder implements JsonSerializable {
     }
 
     /**
+     * Whether this builder adds null values to the array (vs. dropping them).
+     * @return true if nulls are added
+     */
+    public boolean allowAddNulls() {
+        return addNulls;
+    }
+
+    /**
      * Get the built {@link IndexedJsonValue}.
      * @return the IndexedJsonValue (the same instance as the public {@link #jv} field)
      */

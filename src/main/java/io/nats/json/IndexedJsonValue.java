@@ -130,9 +130,8 @@ public class IndexedJsonValue extends AbstractIndexedJsonValue<IndexedJsonValue>
                 return fromMap(jv);
             case ARRAY:
                 return fromArray(jv);
-            default:
-                return NULL;
         }
+        return NULL;
     }
 
     private static IndexedJsonValue fromMap(@NonNull JsonValue jv) {

@@ -129,9 +129,8 @@ public class LazyJsonValue extends AbstractIndexedJsonValue<LazyJsonValue> {
                 return fromMap(jv);
             case ARRAY:
                 return fromArray(jv);
-            default:
-                return NULL;
         }
+        return NULL;
     }
 
     private static LazyJsonValue fromMap(@NonNull JsonValue jv) {

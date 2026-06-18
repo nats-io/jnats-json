@@ -114,6 +114,14 @@ public class LazyMapBuilder implements JsonSerializable {
     }
 
     /**
+     * Whether this builder puts null values in the map (vs. dropping them).
+     * @return true if nulls are put
+     */
+    public boolean allowPutNulls() {
+        return putNulls;
+    }
+
+    /**
      * Get the built {@link LazyJsonValue}.
      * @return the LazyJsonValue (the same instance as the public {@link #jv} field)
      */

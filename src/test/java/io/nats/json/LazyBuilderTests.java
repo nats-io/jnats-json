@@ -263,4 +263,118 @@ public final class LazyBuilderTests {
         assertTrue(a.isEmpty());
         assertEquals("[]", v.toJson());
     }
+
+    // ---- null and explicit-NULL-sentinel coverage (map + array, both modes) ----
+
+    @Test
+    public void testMapBuilderNullPaths() {
+        // null map argument is a no-op
+        assertEquals("{}", LazyMapBuilder.instance().putEntries(null).toJson());
+
+        // explicit NULL sentinels are treated as null
+        assertEquals("{}", LazyMapBuilder.instance()
+            .put("a", JsonValue.NULL).put("b", LazyJsonValue.NULL).toJson());
+        assertEquals("{\"a\":null,\"b\":null}", LazyMapBuilder.instance(true)
+            .put("a", JsonValue.NULL).put("b", LazyJsonValue.NULL).toJson());
+
+        Map<String, Object> src = new LinkedHashMap<>();
+        src.put("a", 1);
+        src.put("b", null);
+        // putEntries drops null values when putNulls is false, keeps them when true
+        assertEquals("{\"a\":1}", LazyMapBuilder.instance().putEntries(src).toJson());
+        assertEquals("{\"a\":1,\"b\":null}", LazyMapBuilder.instance(true).putEntries(src).toJson());
+    }
+
+    @Test
+    public void testArrayBuilderNullPaths() {
+        // null collection argument is a no-op
+        assertEquals("[]", LazyArrayBuilder.instance().addItems(null).toJson());
+
+        // explicit NULL sentinels are treated as null
+        assertEquals("[]", LazyArrayBuilder.instance()
+            .add(JsonValue.NULL).add(LazyJsonValue.NULL).toJson());
+        assertEquals("[null,null]", LazyArrayBuilder.instance(true)
+            .add(JsonValue.NULL).add(LazyJsonValue.NULL).toJson());
+
+        // addItems drops null items when addNulls is false, keeps them when true
+        assertEquals("[\"a\",\"b\"]",
+            LazyArrayBuilder.instance().addItems(Arrays.asList("a", null, "b")).toJson());
+        assertEquals("[\"a\",null,\"b\"]",
+            LazyArrayBuilder.instance(true).addItems(Arrays.asList("a", null, "b")).toJson());
+    }
+
+    // ---- constructors, factories, validation, and toJsonValue ----
+
+    @Test
+    public void testConstructorsAndFactories() {
+        // map builder: no-arg ctor, boolean ctor, instance(), instance(boolean)
+        assertFalse(new LazyMapBuilder().allowPutNulls());
+        assertTrue(new LazyMapBuilder(true).allowPutNulls());
+        assertFalse(LazyMapBuilder.instance().allowPutNulls());
+        assertTrue(LazyMapBuilder.instance(true).allowPutNulls());
+        assertEquals("{\"k\":1}", new LazyMapBuilder().put("k", 1).toJson());
+        assertEquals("{\"k\":null}", new LazyMapBuilder(true).put("k", null).toJson());
+
+        // array builder: no-arg ctor, boolean ctor, instance(), instance(boolean)
+        assertFalse(new LazyArrayBuilder().allowAddNulls());
+        assertTrue(new LazyArrayBuilder(true).allowAddNulls());
+        assertFalse(LazyArrayBuilder.instance().allowAddNulls());
+        assertTrue(LazyArrayBuilder.instance(true).allowAddNulls());
+        assertEquals("[1]", new LazyArrayBuilder().add(1).toJson());
+        assertEquals("[null]", new LazyArrayBuilder(true).add(null).toJson());
+    }
+
+    @Test
+    public void testValueLeafConstructorsAndValidation() {
+        // valid leaf constructors
+        assertEquals("hello", new LazyJsonValue("hello").getString());
+        assertEquals(Integer.valueOf(7), new LazyJsonValue(JsonValueType.INTEGER, 7).getInteger());
+        assertEquals(Long.valueOf(7L), new LazyJsonValue(JsonValueType.LONG, 7L).getLong());
+        assertEquals(Double.valueOf(1.5d), new LazyJsonValue(JsonValueType.DOUBLE, 1.5d).getDouble());
+
+        // validation: STRING requires a non-null string
+        assertThrows(IllegalArgumentException.class, () -> new LazyJsonValue((String) null));
+        // validation: a numeric type requires a non-null number
+        assertThrows(IllegalArgumentException.class, () -> new LazyJsonValue(JsonValueType.INTEGER, (Number) null));
+        // validation: the cache constructor only supports STRING and numeric types
+        assertThrows(IllegalArgumentException.class, () -> new LazyJsonValue(JsonValueType.BOOL, 1));
+    }
+
+    @Test
+    public void testToJsonValue() {
+        JsonValue expected = MapBuilder.instance()
+            .put("s", "x")
+            .put("i", 1)
+            .put("l", 3000000000L)
+            .put("d", 1.5d)
+            .put("b", true)
+            .put("nested", MapBuilder.instance().put("a", 1).toJsonValue())
+            .put("arr", Arrays.asList("y", "z"))
+            .toJsonValue();
+
+        LazyMapBuilder b = LazyMapBuilder.instance()
+            .put("s", "x")
+            .put("i", 1)
+            .put("l", 3000000000L)
+            .put("d", 1.5d)
+            .put("b", true)
+            .put("nested", LazyMapBuilder.instance().put("a", 1).build())
+            .put("arr", Arrays.asList("y", "z"));
+
+        // the public jv field is the same instance build() returns
+        assertSame(b.jv, b.build());
+        // build() returns the lazy value; toJsonValue() returns a materialized JsonValue view
+        assertEquals(LazyJsonValue.class, b.build().getClass());
+        JsonValue fromBuilder = b.toJsonValue();
+        assertEquals(JsonValue.class, fromBuilder.getClass());
+        assertEquals(expected, fromBuilder);
+        // value.toJsonValue() (the recursive AbstractIndexedJsonValue path: leaves, MAP, ARRAY)
+        assertEquals(expected, b.build().toJsonValue());
+
+        // array builder toJsonValue()
+        JsonValue arrExpected = ArrayBuilder.instance().add("y").add(1).add(true).toJsonValue();
+        JsonValue arrFromBuilder = LazyArrayBuilder.instance().add("y").add(1).add(true).toJsonValue();
+        assertEquals(JsonValue.class, arrFromBuilder.getClass());
+        assertEquals(arrExpected, arrFromBuilder);
+    }
 }

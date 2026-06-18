@@ -681,6 +681,10 @@ public final class JsonParsingTests {
         Map<String, Object> map = getValuesMap();
 
         MapBuilder builder = MapBuilder.instance(true);
+        assertTrue(builder.allowPutNulls());
+        assertFalse(MapBuilder.instance().allowPutNulls());
+        assertFalse(new MapBuilder().allowPutNulls());
+        assertTrue(new MapBuilder(true).allowPutNulls());
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             builder.put(entry.getKey(), entry.getValue());
         }
@@ -764,6 +768,11 @@ public final class JsonParsingTests {
 
     @Test
     public void testValueUtilsArrayBuilder() {
+        assertTrue(ArrayBuilder.instance(true).allowAddNulls());
+        assertFalse(ArrayBuilder.instance().allowAddNulls());
+        assertFalse(new ArrayBuilder().allowAddNulls());
+        assertTrue(new ArrayBuilder(true).allowAddNulls());
+
         ArrayBuilder builder1 = makeArrayBuilder(true);
         validateArray(false, builder1.toJsonValue(), true);
         validateArray(true, JsonParser.parseUnchecked(builder1.toJson(), DECIMALS), true);
@@ -972,6 +981,10 @@ public final class JsonParsingTests {
         assertTrue(x1 < x2);
         assertTrue(x1 < x3);
         assertTrue(x2 < x3);
+        assertEquals(3, jv.getMapOrder().size());
+
+        jv.setMapOrder((String[]) null);
+        assertTrue(jv.getMapOrder().isEmpty());
 
         jv.setMapOrder(Arrays.asList("key3", "key1", "key2"));
         json = jv.toJson();
@@ -981,6 +994,10 @@ public final class JsonParsingTests {
         assertTrue(x1 < x2);
         assertTrue(x1 < x3);
         assertTrue(x2 < x3);
+        assertEquals(3, jv.getMapOrder().size());
+
+        jv.setMapOrder((List<String>) null);
+        assertTrue(jv.getMapOrder().isEmpty());
 
         assertThrows(IllegalStateException.class, () -> new JsonValue("not a map").addMapOrder("key"));
         assertThrows(IllegalStateException.class, () -> new JsonValue("not a map").setMapOrder("key"));
