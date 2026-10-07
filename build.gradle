@@ -55,6 +55,8 @@ tasks.register('bundle', Bundle) {
 jar {
     bundle {
         bnd("Bundle-Name": bundleName,
+                // export the package so other OSGi bundles (jnats) can import it
+                "-exportcontents": "io.nats.json",
                 "Bundle-Vendor": "nats.io",
                 "Bundle-Description": "JNats JSON Utility",
                 "Bundle-DocURL": "https://github.com/nats-io/jnats-json",
