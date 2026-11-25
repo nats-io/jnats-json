@@ -4,21 +4,25 @@ This file lists the dependencies used in this repository.
 
 #### Runtime Dependencies
 
-None
+| Dependency                                      | License                                 |
+|-------------------------------------------------|-----------------------------------------|
+| org.jspecify:jspecify:1.0.0                     | Apache 2.0 License                      |
+| commons-codec:commons-codec:1.23.0              | Apache 2.0 License                      |
 
 #### Test Dependencies
 
 | Dependency                                      | License                                 |
 |-------------------------------------------------|-----------------------------------------|
-| org.apiguardian:apiguardian-api:1.1.0           | Apache 2.0 License                      |
-| org.junit.jupiter:junit-jupiter-api:5.7.0       | Apache 2.0 License                      |
-| org.junit.jupiter:junit-jupiter-engine:5.7.0    | Apache 2.0 License                      |
-| org.junit.jupiter:junit-jupiter-params:5.7.0    | Apache 2.0 License                      |
-| org.junit.jupiter:junit-jupiter:5.7.0           | Apache 2.0 License                      |
-| org.junit.platform:junit-platform-commons:1.7.0 | Apache 2.0 License                      |
-| org.junit.platform:junit-platform-engine:1.7.0  | Apache 2.0 License                      |
-| org.junit:junit-bom:5.7.0                       | Apache 2.0 License                      |
-| org.opentest4j:opentest4j:1.2.0                 | Apache 2.0 License                      |
+| org.apiguardian:apiguardian-api:1.1.2           | Apache 2.0 License                      |
+| org.junit.jupiter:junit-jupiter-api:5.14.1      | Eclipse Public License Version 2.0      |
+| org.junit.jupiter:junit-jupiter-engine:5.14.1   | Eclipse Public License Version 2.0      |
+| org.junit.jupiter:junit-jupiter-params:5.14.1   | Eclipse Public License Version 2.0      |
+| org.junit.jupiter:junit-jupiter:5.14.1          | Eclipse Public License Version 2.0      |
+| org.junit.platform:junit-platform-commons:1.14.1 | Eclipse Public License Version 2.0     |
+| org.junit.platform:junit-platform-engine:1.14.1 | Eclipse Public License Version 2.0      |
+| org.junit.platform:junit-platform-launcher:1.14.1 | Eclipse Public License Version 2.0    |
+| org.junit:junit-bom:5.14.1                      | Eclipse Public License Version 2.0      |
+| org.opentest4j:opentest4j:1.3.0                 | Apache 2.0 License                      |
 
 #### Build / Coverage Dependencies
 
